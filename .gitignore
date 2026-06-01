@@ -1,0 +1,29 @@
+# ===== Secrets / env =====
+.env
+.env.*
+!.env.example
+
+# ===== Backend (PHP / Slim) =====
+api/vendor/
+api/var/cache/
+api/logs/*
+!api/logs/README.md
+api/.phpunit.result.cache
+api/coverage/
+
+# ===== Frontend (Node / Vite) =====
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.local
+frontend/coverage/
+
+# ===== Editors / OS =====
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# ===== Misc =====
+node_modules/
