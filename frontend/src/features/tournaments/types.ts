@@ -145,21 +145,22 @@ export type UpdateAdvancementRulePayload = Partial<CreateAdvancementRulePayload>
 /* Roles (designate referee/delegate by email)                         */
 /* ------------------------------------------------------------------ */
 
-export type DesignableRole = 'referee' | 'delegate' | 'organizer'
+/** Roles assignable through the roles endpoint (organizer is set at creation). */
+export type DesignableRole = 'referee' | 'delegate'
+
+/** Every role value that can appear on a role row. */
+export type TournamentRoleValue = DesignableRole | 'organizer' | 'player'
 
 /** A role row as listed by GET /tournaments/{id}/roles. */
 export interface TournamentRole {
   id: number
   tournament_id: number
   user_id: number
-  role: DesignableRole
+  role: TournamentRoleValue
   team_id: number | null
-  /** Backend is expected to embed the user for display. */
-  user?: {
-    id: number
-    name: string
-    email: string
-  }
+  /** Backend embeds the user's name/email as flat columns for display. */
+  user_name?: string | null
+  user_email?: string | null
 }
 
 export interface CreateRolePayload {

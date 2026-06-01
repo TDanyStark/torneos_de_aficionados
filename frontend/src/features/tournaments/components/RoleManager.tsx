@@ -23,22 +23,23 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/shared/StateMessage'
 import { applyApiError } from '@/lib/formErrors'
-import type { DesignableRole } from '../types'
+import type { TournamentRoleValue } from '../types'
 import {
   useCreateRole,
   useDeleteRole,
   useTournamentRoles,
 } from '../api/useRoles'
 
-const ROLE_LABELS: Record<DesignableRole, string> = {
+const ROLE_LABELS: Record<TournamentRoleValue, string> = {
   organizer: 'Organizador',
   referee: 'Árbitro',
   delegate: 'Delegado',
+  player: 'Jugador',
 }
 
 const roleFormSchema = z.object({
   email: z.string().email('Email inválido'),
-  role: z.enum(['referee', 'delegate', 'organizer']),
+  role: z.enum(['referee', 'delegate']),
 })
 
 type RoleFormValues = z.infer<typeof roleFormSchema>
@@ -111,7 +112,6 @@ export function RoleManager({ tournamentId }: { tournamentId: number }) {
                   <SelectContent>
                     <SelectItem value="referee">Árbitro</SelectItem>
                     <SelectItem value="delegate">Delegado</SelectItem>
-                    <SelectItem value="organizer">Organizador</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -141,11 +141,11 @@ export function RoleManager({ tournamentId }: { tournamentId: number }) {
             >
               <div className="text-sm">
                 <span className="font-medium">
-                  {role.user?.name ?? role.user?.email ?? `Usuario #${role.user_id}`}
+                  {role.user_name ?? role.user_email ?? `Usuario #${role.user_id}`}
                 </span>
-                {role.user?.email ? (
+                {role.user_email ? (
                   <span className="text-muted-foreground ml-2">
-                    {role.user.email}
+                    {role.user_email}
                   </span>
                 ) : null}
               </div>
