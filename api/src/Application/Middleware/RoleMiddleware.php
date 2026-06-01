@@ -69,12 +69,9 @@ final class RoleMiddleware implements MiddlewareInterface
 
     private function resolveTournamentId(Request $request): int
     {
-        $route = $request->getAttribute('__route__');
+        $route = RouteContext::fromRequest($request)->getRoute();
 
-        $value = null;
-        if ($route !== null && method_exists($route, 'getArgument')) {
-            $value = $route->getArgument($this->tournamentArg);
-        }
+        $value = $route !== null ? $route->getArgument($this->tournamentArg) : null;
 
         if ($value === null || !ctype_digit((string) $value)) {
             throw new NotFoundException('Torneo no encontrado.');
