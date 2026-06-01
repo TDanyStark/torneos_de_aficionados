@@ -28,14 +28,17 @@ export function GroupManager({ stageId }: { stageId: number }) {
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
-    defaultValues: { name: '', position: (groups?.length ?? 0) + 1 },
+    defaultValues: { name: '', position: String((groups?.length ?? 0) + 1) },
   })
 
   const onSubmit = async (values: GroupFormValues) => {
     try {
-      await createGroup.mutateAsync(values)
+      await createGroup.mutateAsync({
+        name: values.name,
+        position: Number(values.position),
+      })
       toast.success('Grupo creado')
-      form.reset({ name: '', position: (groups?.length ?? 0) + 2 })
+      form.reset({ name: '', position: String((groups?.length ?? 0) + 2) })
     } catch (error) {
       applyApiError(error, form.setError, ['name', 'position'])
     }

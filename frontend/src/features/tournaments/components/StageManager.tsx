@@ -22,7 +22,7 @@ import {
 import { EmptyState } from '@/components/shared/StateMessage'
 import { applyApiError } from '@/lib/formErrors'
 import { stageSchema, type StageFormValues } from '../schemas'
-import type { StageLegs, StageType } from '../types'
+import type { StageType } from '../types'
 import {
   useCreateStage,
   useDeleteStage,
@@ -45,20 +45,25 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
     defaultValues: {
       name: '',
       type: 'league',
-      position: (stages?.length ?? 0) + 1,
-      legs: 1,
+      position: String((stages?.length ?? 0) + 1),
+      legs: '1',
     },
   })
 
   const onSubmit = async (values: StageFormValues) => {
     try {
-      await createStage.mutateAsync(values)
+      await createStage.mutateAsync({
+        name: values.name,
+        type: values.type,
+        position: Number(values.position),
+        legs: Number(values.legs) === 2 ? 2 : 1,
+      })
       toast.success('Fase creada')
       form.reset({
         name: '',
         type: 'league',
-        position: (stages?.length ?? 0) + 2,
-        legs: 1,
+        position: String((stages?.length ?? 0) + 2),
+        legs: '1',
       })
     } catch (error) {
       applyApiError(error, form.setError, ['name', 'type', 'position', 'legs'])
@@ -124,10 +129,7 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Partidos</FormLabel>
-                <Select
-                  value={String(field.value)}
-                  onValueChange={(v) => field.onChange(Number(v) as StageLegs)}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />

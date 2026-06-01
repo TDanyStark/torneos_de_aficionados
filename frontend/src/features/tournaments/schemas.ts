@@ -1,5 +1,30 @@
 import { z } from 'zod'
-import type { StageLegs, StageType } from './types'
+import type { StageType } from './types'
+
+/**
+ * Numeric form fields are kept as STRINGS in the schema because controlled
+ * `<input type="number">` + `{...field}` always yields a string. We validate
+ * that the string is a valid integer and convert to a number in the mappers.
+ * This keeps z.input === z.output, so RHF infers types cleanly (no coercion
+ * input/output mismatch).
+ */
+const intString = (opts?: { min?: number; message?: string }) =>
+  z
+    .string()
+    .min(1, opts?.message ?? 'Requerido')
+    .refine((v) => /^-?\d+$/.test(v), 'Debe ser un número entero')
+    .refine(
+      (v) => opts?.min === undefined || Number(v) >= opts.min,
+      opts?.min !== undefined ? `Mínimo ${opts.min}` : 'Valor inválido',
+    )
+
+const optionalIntString = z
+  .string()
+  .optional()
+  .refine(
+    (v) => v === undefined || v === '' || /^\d+$/.test(v),
+    'Debe ser un número entero',
+  )
 
 /** Step 1 — basics. */
 export const basicsSchema = z.object({
@@ -9,21 +34,17 @@ export const basicsSchema = z.object({
     .int()
     .positive('Selecciona un deporte'),
   description: z.string().max(1000).optional().or(z.literal('')),
-  logo_url: z
-    .string()
-    .url('URL inválida')
-    .optional()
-    .or(z.literal('')),
+  logo_url: z.string().url('URL inválida').optional().or(z.literal('')),
 })
 
 export type BasicsValues = z.infer<typeof basicsSchema>
 
 /** Step 2 — configuration. */
 export const configSchema = z.object({
-  periods_count: z.coerce.number().int().min(1, 'Mínimo 1 periodo'),
-  points_win: z.coerce.number().int().min(0),
-  points_draw: z.coerce.number().int().min(0),
-  points_loss: z.coerce.number().int().min(0),
+  periods_count: intString({ min: 1, message: 'Mínimo 1 periodo' }),
+  points_win: intString({ min: 0 }),
+  points_draw: intString({ min: 0 }),
+  points_loss: intString({ min: 0 }),
   allow_late_registration: z.boolean(),
   registration_open: z.boolean(),
   starts_at: z.string().optional().or(z.literal('')),
@@ -42,15 +63,13 @@ const STAGE_TYPES: [StageType, ...StageType[]] = [
   'groups',
   'knockout',
 ]
-const STAGE_LEGS: [StageLegs, ...StageLegs[]] = [1, 2]
 
 export const stageSchema = z.object({
   name: z.string().min(2, 'Nombre requerido'),
   type: z.enum(STAGE_TYPES),
-  position: z.coerce.number().int().min(1),
-  legs: z
-    .union([z.literal(1), z.literal(2)])
-    .refine((v): v is StageLegs => STAGE_LEGS.includes(v as StageLegs)),
+  position: intString({ min: 1 }),
+  /** Stored as '1' | '2' from the select. */
+  legs: z.enum(['1', '2']),
 })
 
 export type StageFormValues = z.infer<typeof stageSchema>
@@ -58,17 +77,17 @@ export type StageFormValues = z.infer<typeof stageSchema>
 /** Group form (step 4). */
 export const groupSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
-  position: z.coerce.number().int().min(1),
+  position: intString({ min: 1 }),
 })
 
 export type GroupFormValues = z.infer<typeof groupSchema>
 
 /** Advancement rule form (step 5). */
 export const advancementRuleSchema = z.object({
-  group_id: z.coerce.number().int().positive().optional().nullable(),
-  qualifies_count: z.coerce.number().int().min(0),
-  eliminates_count: z.coerce.number().int().min(0),
-  target_stage_id: z.coerce.number().int().positive().optional().nullable(),
+  group_id: optionalIntString,
+  qualifies_count: intString({ min: 0 }),
+  eliminates_count: intString({ min: 0 }),
+  target_stage_id: optionalIntString,
 })
 
 export type AdvancementRuleFormValues = z.infer<typeof advancementRuleSchema>

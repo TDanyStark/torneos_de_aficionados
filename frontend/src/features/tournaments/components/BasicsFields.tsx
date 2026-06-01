@@ -21,7 +21,6 @@ import { useSports } from '../api/useSports'
 export function BasicsFields<T extends FieldValues>({
   control,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<T>
 }) {
   const { data: sports, isLoading } = useSports()

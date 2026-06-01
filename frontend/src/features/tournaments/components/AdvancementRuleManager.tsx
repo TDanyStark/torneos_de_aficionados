@@ -33,27 +33,30 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
   const form = useForm<AdvancementRuleFormValues>({
     resolver: zodResolver(advancementRuleSchema),
     defaultValues: {
-      group_id: undefined,
-      qualifies_count: 1,
-      eliminates_count: 0,
-      target_stage_id: undefined,
+      group_id: '',
+      qualifies_count: '1',
+      eliminates_count: '0',
+      target_stage_id: '',
     },
   })
+
+  const toNullableNumber = (v: string | undefined): number | null =>
+    v && v.trim() !== '' ? Number(v) : null
 
   const onSubmit = async (values: AdvancementRuleFormValues) => {
     try {
       await createRule.mutateAsync({
-        group_id: values.group_id ?? null,
-        qualifies_count: values.qualifies_count,
-        eliminates_count: values.eliminates_count,
-        target_stage_id: values.target_stage_id ?? null,
+        group_id: toNullableNumber(values.group_id),
+        qualifies_count: Number(values.qualifies_count),
+        eliminates_count: Number(values.eliminates_count),
+        target_stage_id: toNullableNumber(values.target_stage_id),
       })
       toast.success('Regla creada')
       form.reset({
-        group_id: undefined,
-        qualifies_count: 1,
-        eliminates_count: 0,
-        target_stage_id: undefined,
+        group_id: '',
+        qualifies_count: '1',
+        eliminates_count: '0',
+        target_stage_id: '',
       })
     } catch (error) {
       applyApiError(error, form.setError, [
@@ -120,12 +123,8 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
                     type="number"
                     min={1}
                     placeholder="Toda la fase"
+                    {...field}
                     value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -143,12 +142,8 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
                     type="number"
                     min={1}
                     placeholder="ID de fase destino"
+                    {...field}
                     value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
                   />
                 </FormControl>
                 <FormMessage />

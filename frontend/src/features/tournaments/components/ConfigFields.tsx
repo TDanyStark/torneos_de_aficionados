@@ -14,7 +14,6 @@ import { Switch } from '@/components/ui/switch'
 export function ConfigFields<T extends FieldValues>({
   control,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<T>
 }) {
   return (
