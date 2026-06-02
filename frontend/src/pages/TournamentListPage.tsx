@@ -1,4 +1,5 @@
 import { Trophy } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { Pagination } from '@/components/shared/Pagination'
 import { useTournamentList } from '@/features/tournaments/api/useTournaments'
@@ -9,6 +10,7 @@ import { TournamentFilterBar } from '@/features/tournaments/components/Tournamen
 import { OrganizerCta } from '@/features/tournaments/components/OrganizerCta'
 
 export function TournamentListPage() {
+  useDocumentTitle('Torneos')
   const { filters, setFilters } = useTournamentFilters()
   const { data, isLoading, isError, error } = useTournamentList(filters)
 

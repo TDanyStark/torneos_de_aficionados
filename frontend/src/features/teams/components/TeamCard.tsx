@@ -41,7 +41,7 @@ export function TeamCard({ team, tournamentSlug }: TeamCardProps) {
       </CardContent>
       <CardFooter>
         <Link
-          to={`/tournaments/${tournamentSlug}/teams/${team.id}`}
+          to={`/t/${tournamentSlug}/equipo/${team.id}`}
           className="text-primary text-sm font-medium hover:underline"
         >
           Ver plantilla →

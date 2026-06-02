@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/shared/StateMessage'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useTeamNameMap } from '@/features/fixtures/api/useTeamNameMap'
 import { useLiveMatch } from '@/features/live/api/useLiveMatch'
 import { LiveScoreboard } from '@/features/live/components/LiveScoreboard'
@@ -18,6 +19,13 @@ export function PublicMatchPage() {
   const live = useLiveMatch(matchId)
   const tournamentId = live.data?.match.tournament_id
   const { nameOf } = useTeamNameMap(tournamentId)
+
+  const match = live.data?.match
+  const matchTitle =
+    match && match.home_team_id !== null && match.away_team_id !== null
+      ? `${nameOf(match.home_team_id)} vs ${nameOf(match.away_team_id)}`
+      : 'Partido en vivo'
+  useDocumentTitle(matchTitle)
 
   if (live.isLoading) {
     return (

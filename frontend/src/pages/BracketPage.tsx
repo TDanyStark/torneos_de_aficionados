@@ -55,7 +55,7 @@ export function BracketPage() {
   return (
     <div className="space-y-5">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to={`/tournaments/${slug}`}>
+        <Link to={`/t/${slug}`}>
           <ArrowLeft className="size-4" />
           {tournament.data?.name ?? 'Torneo'}
         </Link>

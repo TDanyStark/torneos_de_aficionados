@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { GitBranch } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { useStages } from '@/features/tournaments/api/useStages'
 import { useFixtureFilters } from '@/features/fixtures/hooks/useFixtureFilters'
@@ -68,6 +70,15 @@ export function TablaPanel({ tournament }: TablaPanelProps) {
       ) : (
         <StandingsTable rows={standings.data.standings} />
       )}
+
+      {/* Knockout bracket stays reachable from the hub via this link. */}
+      <Link
+        to={`/tournaments/${tournament.slug}/bracket`}
+        className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+      >
+        <GitBranch className="size-4" />
+        Ver cuadro de eliminación
+      </Link>
     </div>
   )
 }

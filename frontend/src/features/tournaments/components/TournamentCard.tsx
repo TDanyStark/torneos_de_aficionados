@@ -43,7 +43,7 @@ export function TournamentCard({ tournament }: { tournament: Tournament }) {
       </CardContent>
       <CardFooter>
         <Link
-          to={`/tournaments/${tournament.slug}`}
+          to={`/t/${tournament.slug}`}
           className="text-primary text-sm font-medium hover:underline"
         >
           Ver detalle →

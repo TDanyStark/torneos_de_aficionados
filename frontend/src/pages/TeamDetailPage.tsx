@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/shared/StateMessage'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
 import { useTeam } from '@/features/teams/api/useTeams'
 import { useRoster } from '@/features/teams/api/useRoster'
@@ -25,6 +26,8 @@ export function TeamDetailPage() {
   const team = useTeam(tournamentId, id)
   const roster = useRoster(id)
 
+  useDocumentTitle(team.data?.name)
+
   if (tournament.isError || team.isError) {
     return <ErrorState message="Equipo no encontrado." />
   }
@@ -34,7 +37,7 @@ export function TeamDetailPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to={`/tournaments/${slug}/teams`}>
+        <Link to={`/t/${slug}?tab=equipos`}>
           <ArrowLeft className="size-4" />
           Equipos
         </Link>

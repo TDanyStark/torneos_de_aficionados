@@ -27,6 +27,9 @@ export function AppHeader() {
           <span>Torneos</span>
         </Link>
         <nav className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/torneos">Torneos</Link>
+          </Button>
           {token ? (
             <>
               <Button variant="ghost" size="sm" asChild>

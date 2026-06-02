@@ -23,6 +23,25 @@ export function applyTheme(mode: ThemeMode): void {
   root.classList.toggle('dark', resolveIsDark(mode))
 }
 
+/**
+ * While the user is in `system` mode, follow the OS color-scheme live (so
+ * toggling dark mode in the OS updates the app without a reload). Returns a
+ * cleanup function. SSR-safe: no-op when `window`/`matchMedia` are unavailable.
+ */
+export function subscribeSystemTheme(getMode: () => ThemeMode): () => void {
+  if (typeof window === 'undefined' || !window.matchMedia) {
+    return () => {}
+  }
+  const mql = window.matchMedia('(prefers-color-scheme: dark)')
+  const onChange = () => {
+    if (getMode() === 'system') {
+      applyTheme('system')
+    }
+  }
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
