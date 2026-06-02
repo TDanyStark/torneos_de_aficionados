@@ -15,6 +15,10 @@ import { TeamManagePage } from '@/pages/TeamManagePage'
 import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
 import { SelfRegistrationPage } from '@/pages/SelfRegistrationPage'
+import { FixturesPage } from '@/pages/FixturesPage'
+import { StandingsPage } from '@/pages/StandingsPage'
+import { BracketPage } from '@/pages/BracketPage'
+import { StageFixturesPage } from '@/pages/StageFixturesPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -42,6 +46,11 @@ export const router = createBrowserRouter([
         path: '/tournaments/:slug/teams/:teamId',
         element: <TeamDetailPage />,
       },
+
+      // Public fixtures / standings / bracket (per tournament, by slug).
+      { path: '/tournaments/:slug/fixtures', element: <FixturesPage /> },
+      { path: '/tournaments/:slug/standings', element: <StandingsPage /> },
+      { path: '/tournaments/:slug/bracket', element: <BracketPage /> },
 
       {
         element: <ProtectedRoute />,
