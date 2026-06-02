@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Domain\AdvancementRule\AdvancementRuleRepository;
+use App\Domain\Fixture\BracketSlotRepository;
+use App\Domain\Fixture\MatchRepository;
+use App\Domain\Fixture\RoundRepository;
 use App\Domain\Group\GroupRepository;
 use App\Domain\GroupTeam\GroupTeamRepository;
 use App\Domain\Player\PlayerRepository;
@@ -15,6 +18,9 @@ use App\Domain\TeamPlayer\TeamPlayerRepository;
 use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\UserRepository;
 use App\Infrastructure\Persistence\AdvancementRule\PdoAdvancementRuleRepository;
+use App\Infrastructure\Persistence\Fixture\PdoBracketSlotRepository;
+use App\Infrastructure\Persistence\Fixture\PdoMatchRepository;
+use App\Infrastructure\Persistence\Fixture\PdoRoundRepository;
 use App\Infrastructure\Persistence\Group\PdoGroupRepository;
 use App\Infrastructure\Persistence\GroupTeam\PdoGroupTeamRepository;
 use App\Infrastructure\Persistence\Player\PdoPlayerRepository;
@@ -43,5 +49,8 @@ return function (ContainerBuilder $containerBuilder) {
         TeamPlayerRepository::class         => \DI\autowire(PdoTeamPlayerRepository::class),
         RegistrationRepository::class       => \DI\autowire(PdoRegistrationRepository::class),
         GroupTeamRepository::class          => \DI\autowire(PdoGroupTeamRepository::class),
+        RoundRepository::class              => \DI\autowire(PdoRoundRepository::class),
+        MatchRepository::class              => \DI\autowire(PdoMatchRepository::class),
+        BracketSlotRepository::class        => \DI\autowire(PdoBracketSlotRepository::class),
     ]);
 };
