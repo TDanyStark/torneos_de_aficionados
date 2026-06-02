@@ -13,7 +13,15 @@ use App\Application\Actions\Group\CreateGroupAction;
 use App\Application\Actions\Group\DeleteGroupAction;
 use App\Application\Actions\Group\ListGroupsAction;
 use App\Application\Actions\Group\UpdateGroupAction;
+use App\Application\Actions\GroupTeam\AssignTeamToGroupAction;
+use App\Application\Actions\GroupTeam\ListGroupTeamsAction;
+use App\Application\Actions\GroupTeam\RemoveTeamFromGroupAction;
 use App\Application\Actions\Health\HealthAction;
+use App\Application\Actions\Player\LookupPlayerAction;
+use App\Application\Actions\Player\PlayerHistoryAction;
+use App\Application\Actions\Registration\CreateRegistrationAction;
+use App\Application\Actions\Registration\ListRegistrationsAction;
+use App\Application\Actions\Registration\UpdateRegistrationAction;
 use App\Application\Actions\Role\CreateTournamentRoleAction;
 use App\Application\Actions\Role\DeleteTournamentRoleAction;
 use App\Application\Actions\Role\ListTournamentRolesAction;
@@ -22,6 +30,14 @@ use App\Application\Actions\Stage\CreateStageAction;
 use App\Application\Actions\Stage\DeleteStageAction;
 use App\Application\Actions\Stage\ListStagesAction;
 use App\Application\Actions\Stage\UpdateStageAction;
+use App\Application\Actions\Team\CreateTeamAction;
+use App\Application\Actions\Team\DeleteTeamAction;
+use App\Application\Actions\Team\ListTeamsAction;
+use App\Application\Actions\Team\UpdateTeamAction;
+use App\Application\Actions\TeamPlayer\AddPlayerToTeamAction;
+use App\Application\Actions\TeamPlayer\DeleteTeamPlayerAction;
+use App\Application\Actions\TeamPlayer\ListRosterAction;
+use App\Application\Actions\TeamPlayer\UpdateTeamPlayerAction;
 use App\Application\Actions\Tournament\CreateTournamentAction;
 use App\Application\Actions\Tournament\DeleteTournamentAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
@@ -97,6 +113,25 @@ return function (App $app) {
             $tournaments->post('/{id}/stages', CreateStageAction::class)
                 ->add($roleGuard->require('organizer'))
                 ->add(JwtAuthMiddleware::class);
+
+            // Teams (nested). List public; create by organizer OR delegate.
+            $tournaments->get('/{id}/teams', ListTeamsAction::class);
+            $tournaments->post('/{id}/teams', CreateTeamAction::class)
+                ->add($roleGuard->require('organizer', 'delegate'))
+                ->add(JwtAuthMiddleware::class);
+
+            // Player pool lookup by cédula (organizer|delegate, owner pool).
+            $tournaments->get('/{id}/players/lookup', LookupPlayerAction::class)
+                ->add($roleGuard->require('organizer', 'delegate'))
+                ->add(JwtAuthMiddleware::class);
+
+            // Registrations. Self-registration is code-gated (no pre-existing role,
+            // so NO RoleMiddleware); the inbox listing is organizer-only.
+            $tournaments->post('/{id}/registrations', CreateRegistrationAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $tournaments->get('/{id}/registrations', ListRegistrationsAction::class)
+                ->add($roleGuard->require('organizer'))
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Tournament role removal. {id} is the role id -> authorized inside action.
@@ -127,6 +162,12 @@ return function (App $app) {
                 ->add(JwtAuthMiddleware::class);
             $groups->delete('/{id}', DeleteGroupAction::class)
                 ->add(JwtAuthMiddleware::class);
+
+            // Group team assignment (deferred from Fase 2). List public; assign
+            // organizer-only (authorized inside the action via group -> stage).
+            $groups->get('/{id}/teams', ListGroupTeamsAction::class);
+            $groups->post('/{id}/teams', AssignTeamToGroupAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Advancement rules module ({id} is the rule id -> authorized inside action).
@@ -134,6 +175,45 @@ return function (App $app) {
             $rules->put('/{id}', UpdateAdvancementRuleAction::class)
                 ->add(JwtAuthMiddleware::class);
             $rules->delete('/{id}', DeleteAdvancementRuleAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Tournament teams module ({id} is the team id -> authorized inside action).
+        $group->group('/tournament-teams', function (Group $teams) {
+            $teams->put('/{id}', UpdateTeamAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $teams->delete('/{id}', DeleteTeamAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Roster (nested under a team). List public; add organizer|delegate.
+            $teams->get('/{id}/players', ListRosterAction::class);
+            $teams->post('/{id}/players', AddPlayerToTeamAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Roster entries module ({id} is the team_players id -> authorized inside).
+        $group->group('/team-players', function (Group $teamPlayers) {
+            $teamPlayers->put('/{id}', UpdateTeamPlayerAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $teamPlayers->delete('/{id}', DeleteTeamPlayerAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Players module ({id} is the player id -> authorized inside action).
+        $group->group('/players', function (Group $players) {
+            $players->get('/{id}/history', PlayerHistoryAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Registrations module ({id} is the registration id -> authorized inside).
+        $group->group('/registrations', function (Group $registrations) {
+            $registrations->patch('/{id}', UpdateRegistrationAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Group team removal ({id} is the group_teams id -> authorized inside).
+        $group->group('/group-teams', function (Group $groupTeams) {
+            $groupTeams->delete('/{id}', RemoveTeamFromGroupAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
     });
