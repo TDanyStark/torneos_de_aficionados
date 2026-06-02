@@ -76,16 +76,20 @@ final class CreateRegistrationAction extends ApiAction
         }
 
         $shortName = isset($body['short_name']) && $body['short_name'] !== '' ? (string) $body['short_name'] : null;
+        $coachName = isset($body['coach_name']) && trim((string) $body['coach_name']) !== '' ? trim((string) $body['coach_name']) : null;
         $logoUrl   = isset($body['logo_url']) && $body['logo_url'] !== '' ? (string) $body['logo_url'] : null;
+        $alias     = isset($body['alias']) && trim((string) $body['alias']) !== '' ? trim((string) $body['alias']) : null;
 
         $registration = $this->registerTeam->execute($tournament, [
             'delegate_user_id' => $user->id,
             'team_name'        => $teamName,
             'short_name'       => $shortName,
+            'coach_name'       => $coachName,
             'logo_url'         => $logoUrl,
             'is_player'        => $isPlayer,
             'document_id'      => isset($body['document_id']) ? trim((string) $body['document_id']) : null,
             'full_name'        => isset($body['full_name']) ? trim((string) $body['full_name']) : null,
+            'alias'            => $alias,
             'birthdate'        => isset($body['birthdate']) && $body['birthdate'] !== '' ? (string) $body['birthdate'] : null,
             'photo_url'        => isset($body['photo_url']) && $body['photo_url'] !== '' ? (string) $body['photo_url'] : null,
             'phone'            => isset($body['phone']) && $body['phone'] !== '' ? (string) $body['phone'] : null,

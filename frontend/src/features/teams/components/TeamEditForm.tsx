@@ -16,7 +16,7 @@ import { useUpdateTeam } from '../api/useTeams'
 import { teamSchema, type TeamFormValues } from '../schemas'
 import type { Team } from '../types'
 
-const KNOWN_FIELDS = ['name', 'short_name', 'logo_url'] as const
+const KNOWN_FIELDS = ['name', 'short_name', 'logo_url', 'coach_name'] as const
 
 export function TeamEditForm({ team }: { team: Team }) {
   const updateTeam = useUpdateTeam(team.id)

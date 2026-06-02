@@ -67,6 +67,14 @@ final class UpdateTeamAction extends ApiAction
             $shortName = trim((string) $body['short_name']);
             $data['short_name'] = $shortName !== '' ? $shortName : null;
         }
+        if (array_key_exists('coach_name', $body)) {
+            $coachName = trim((string) $body['coach_name']);
+            if ($coachName !== '' && mb_strlen($coachName) > 120) {
+                $errors['coach_name'] = 'El nombre del entrenador no puede superar 120 caracteres.';
+            } else {
+                $data['coach_name'] = $coachName !== '' ? $coachName : null;
+            }
+        }
         if (array_key_exists('logo_url', $body)) {
             $logoUrl = trim((string) $body['logo_url']);
             $data['logo_url'] = $logoUrl !== '' ? $logoUrl : null;

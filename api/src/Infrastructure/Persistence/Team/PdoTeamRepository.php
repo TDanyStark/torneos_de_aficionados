@@ -71,16 +71,17 @@ final class PdoTeamRepository implements TeamRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO tournament_teams
-                (tournament_id, name, short_name, logo_url, delegate_user_id, status,
+                (tournament_id, name, short_name, coach_name, logo_url, delegate_user_id, status,
                  created_at, updated_at)
              VALUES
-                (:tournament_id, :name, :short_name, :logo_url, :delegate_user_id, :status,
+                (:tournament_id, :name, :short_name, :coach_name, :logo_url, :delegate_user_id, :status,
                  NOW(), NOW())'
         );
         $stmt->execute([
             'tournament_id'    => $data['tournament_id'],
             'name'             => $data['name'],
             'short_name'       => $data['short_name'] ?? null,
+            'coach_name'       => $data['coach_name'] ?? null,
             'logo_url'         => $data['logo_url'] ?? null,
             'delegate_user_id' => $data['delegate_user_id'] ?? null,
             'status'           => $data['status'] ?? 'pending',
@@ -99,7 +100,7 @@ final class PdoTeamRepository implements TeamRepository
      */
     public function update(int $id, array $data): Team
     {
-        $allowed = ['name', 'short_name', 'logo_url', 'delegate_user_id', 'status'];
+        $allowed = ['name', 'short_name', 'coach_name', 'logo_url', 'delegate_user_id', 'status'];
 
         $sets = [];
         $params = ['id' => $id];

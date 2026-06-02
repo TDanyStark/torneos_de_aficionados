@@ -63,6 +63,7 @@ final class RegisterTeamService
                 'tournament_id'    => $tournament->id,
                 'name'             => $input['team_name'],
                 'short_name'       => $input['short_name'] ?? null,
+                'coach_name'       => $input['coach_name'] ?? null,
                 'logo_url'         => $input['logo_url'] ?? null,
                 'delegate_user_id' => $delegateUserId,
                 'status'           => 'pending',
@@ -95,6 +96,7 @@ final class RegisterTeamService
                         'user_id'           => $delegateUserId,
                         'document_id'       => $documentId,
                         'full_name'         => $fullName,
+                        'alias'             => $input['alias'] ?? null,
                         'birthdate'         => $input['birthdate'] ?? null,
                         'photo_url'         => $input['photo_url'] ?? null,
                         'phone'             => $input['phone'] ?? null,
@@ -111,6 +113,16 @@ final class RegisterTeamService
                 if ($shirtNumber !== null && $this->teamPlayers->shirtNumberTaken($team->id, $shirtNumber)) {
                     throw new ValidationException([
                         'shirt_number' => 'El dorsal ya está asignado en este equipo.',
+                    ]);
+                }
+
+                // Enforce roster_limit (NULL = unlimited). The new team starts empty,
+                // so this never blocks the first player when roster_limit >= 1, but the
+                // guard is included for correctness and future custom-field wrapping.
+                if ($tournament->rosterLimit !== null
+                    && $this->teamPlayers->countByTeam($team->id) >= $tournament->rosterLimit) {
+                    throw new ValidationException([
+                        'document_id' => "El equipo alcanzó el límite de jugadores ({$tournament->rosterLimit}).",
                     ]);
                 }
 

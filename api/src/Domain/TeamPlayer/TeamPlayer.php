@@ -27,6 +27,7 @@ final class TeamPlayer implements JsonSerializable
         // Joined player data (read-only convenience for roster listings).
         public readonly ?string $documentId = null,
         public readonly ?string $fullName = null,
+        public readonly ?string $alias = null,
         public readonly ?string $birthdate = null,
         public readonly ?string $photoUrl = null,
         public readonly ?string $phone = null,
@@ -51,6 +52,7 @@ final class TeamPlayer implements JsonSerializable
             isset($row['updated_at']) ? (string) $row['updated_at'] : null,
             isset($row['document_id']) && $row['document_id'] !== null ? (string) $row['document_id'] : null,
             isset($row['full_name']) && $row['full_name'] !== null ? (string) $row['full_name'] : null,
+            isset($row['alias']) && $row['alias'] !== null ? (string) $row['alias'] : null,
             isset($row['birthdate']) && $row['birthdate'] !== null ? (string) $row['birthdate'] : null,
             isset($row['photo_url']) && $row['photo_url'] !== null ? (string) $row['photo_url'] : null,
             isset($row['phone']) && $row['phone'] !== null ? (string) $row['phone'] : null,
@@ -73,6 +75,7 @@ final class TeamPlayer implements JsonSerializable
             'status'             => $this->status,
             'document_id'        => $this->documentId,
             'full_name'          => $this->fullName,
+            'alias'              => $this->alias,
             'birthdate'          => $this->birthdate,
             'photo_url'          => $this->photoUrl,
             'phone'              => $this->phone,

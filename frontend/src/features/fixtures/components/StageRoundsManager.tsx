@@ -162,6 +162,12 @@ export function StageRoundsManager({
                           {nameOf(match.away_team_id)}
                         </span>
                         <span className="flex shrink-0 items-center gap-2">
+                          <MatchRefereeSelect
+                            tournamentId={tournamentId}
+                            matchId={match.id}
+                            refereeId={match.referee_id}
+                            referees={refereeList}
+                          />
                           <MatchStatusBadge status={match.status} />
                           <Button
                             variant="ghost"

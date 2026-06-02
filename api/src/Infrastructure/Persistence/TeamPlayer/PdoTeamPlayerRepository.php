@@ -17,7 +17,7 @@ final class PdoTeamPlayerRepository implements TeamPlayerRepository
     public function findById(int $id): ?TeamPlayer
     {
         $stmt = $this->pdo->prepare(
-            'SELECT tp.*, p.document_id, p.full_name, p.birthdate, p.photo_url, p.phone
+            'SELECT tp.*, p.document_id, p.full_name, p.alias, p.birthdate, p.photo_url, p.phone
              FROM team_players tp
              INNER JOIN players p ON p.id = tp.player_id
              WHERE tp.id = :id LIMIT 1'
@@ -34,7 +34,7 @@ final class PdoTeamPlayerRepository implements TeamPlayerRepository
     public function findByTeam(int $teamId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT tp.*, p.document_id, p.full_name, p.birthdate, p.photo_url, p.phone
+            'SELECT tp.*, p.document_id, p.full_name, p.alias, p.birthdate, p.photo_url, p.phone
              FROM team_players tp
              INNER JOIN players p ON p.id = tp.player_id
              WHERE tp.tournament_team_id = :team_id
@@ -46,6 +46,17 @@ final class PdoTeamPlayerRepository implements TeamPlayerRepository
             static fn (array $row): TeamPlayer => TeamPlayer::fromRow($row),
             $stmt->fetchAll()
         );
+    }
+
+    public function countByTeam(int $teamId): int
+    {
+        // Mirrors findByTeam's scope (all roster rows for the team, no status filter).
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM team_players WHERE tournament_team_id = :team_id'
+        );
+        $stmt->execute(['team_id' => $teamId]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     public function existsForTeamAndPlayer(int $teamId, int $playerId): bool

@@ -18,6 +18,11 @@ interface TeamPlayerRepository
      */
     public function findByTeam(int $teamId): array;
 
+    /**
+     * Number of roster entries for a team (used to enforce roster_limit).
+     */
+    public function countByTeam(int $teamId): int;
+
     public function existsForTeamAndPlayer(int $teamId, int $playerId): bool;
 
     /**

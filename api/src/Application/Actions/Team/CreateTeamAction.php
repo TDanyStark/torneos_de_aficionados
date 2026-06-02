@@ -47,16 +47,21 @@ final class CreateTeamAction extends ApiAction
 
         $name      = trim((string) ($body['name'] ?? ''));
         $shortName = isset($body['short_name']) ? trim((string) $body['short_name']) : null;
+        $coachName = isset($body['coach_name']) ? trim((string) $body['coach_name']) : null;
         $logoUrl   = isset($body['logo_url']) ? trim((string) $body['logo_url']) : null;
 
         if ($name === '') {
             throw new ValidationException(['name' => 'El nombre del equipo es obligatorio.']);
+        }
+        if ($coachName !== null && mb_strlen($coachName) > 120) {
+            throw new ValidationException(['coach_name' => 'El nombre del entrenador no puede superar 120 caracteres.']);
         }
 
         $team = $this->teams->create([
             'tournament_id'    => $tournamentId,
             'name'             => $name,
             'short_name'       => $shortName !== '' ? $shortName : null,
+            'coach_name'       => $coachName !== '' ? $coachName : null,
             'logo_url'         => $logoUrl !== '' ? $logoUrl : null,
             'delegate_user_id' => $user->id,
             'status'           => 'pending',

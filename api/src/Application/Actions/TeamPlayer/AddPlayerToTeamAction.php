@@ -64,6 +64,20 @@ final class AddPlayerToTeamAction extends ApiAction
             throw new ValidationException(['document_id' => 'La cédula es obligatoria.']);
         }
 
+        // Enforce roster_limit (NULL = unlimited) before adding the entry.
+        if ($tournament->rosterLimit !== null
+            && $this->teamPlayers->countByTeam($teamId) >= $tournament->rosterLimit) {
+            throw new ValidationException([
+                'document_id' => "El equipo alcanzó el límite de jugadores ({$tournament->rosterLimit}).",
+            ]);
+        }
+
+        $alias = isset($body['alias']) ? trim((string) $body['alias']) : null;
+        if ($alias !== null && mb_strlen($alias) > 60) {
+            throw new ValidationException(['alias' => 'El alias no puede superar 60 caracteres.']);
+        }
+        $alias = ($alias !== null && $alias !== '') ? $alias : null;
+
         // Roster data.
         $shirtNumber = isset($body['shirt_number']) && $body['shirt_number'] !== '' && $body['shirt_number'] !== null
             ? (int) $body['shirt_number']
@@ -95,10 +109,14 @@ final class AddPlayerToTeamAction extends ApiAction
                 'user_id'           => null,
                 'document_id'       => $documentId,
                 'full_name'         => $fullName,
+                'alias'             => $alias,
                 'birthdate'         => $birthdate,
                 'photo_url'         => $photoUrl,
                 'phone'             => $phone,
             ]);
+        } elseif ($alias !== null) {
+            // Reusing a pool player: refresh the alias when one was provided.
+            $player = $this->players->update($player->id, ['alias' => $alias]);
         }
 
         // The player must not already be on this roster.

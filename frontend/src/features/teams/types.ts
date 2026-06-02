@@ -17,6 +17,7 @@ export interface Team {
   name: string
   short_name: string | null
   logo_url: string | null
+  coach_name: string | null
   delegate_user_id: number | null
   status: TeamStatus
   created_at: string
@@ -27,6 +28,7 @@ export interface CreateTeamPayload {
   name: string
   short_name?: string | null
   logo_url?: string | null
+  coach_name?: string | null
 }
 
 export type UpdateTeamPayload = Partial<CreateTeamPayload> & {
@@ -54,6 +56,7 @@ export interface Player {
   birthdate: string | null
   photo_url: string | null
   phone: string | null
+  alias: string | null
   created_at: string
   updated_at: string
 }
@@ -74,6 +77,7 @@ export interface TeamPlayer {
   birthdate: string | null
   photo_url: string | null
   phone: string | null
+  alias: string | null
   created_at: string
   updated_at: string
 }
@@ -93,6 +97,7 @@ export interface AddPlayerPayload {
   birthdate?: string | null
   photo_url?: string | null
   phone?: string | null
+  alias?: string | null
 }
 
 export interface UpdateTeamPlayerPayload {
@@ -135,12 +140,14 @@ export interface CreateRegistrationPayload {
   team_name: string
   short_name?: string | null
   logo_url?: string | null
+  coach_name?: string | null
   is_player: boolean
   document_id?: string
   full_name?: string
   birthdate?: string | null
   photo_url?: string | null
   phone?: string | null
+  alias?: string | null
   shirt_number?: number | null
   position?: string | null
   is_captain?: boolean

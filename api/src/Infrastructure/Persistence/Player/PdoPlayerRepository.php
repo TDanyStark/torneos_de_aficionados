@@ -46,10 +46,10 @@ final class PdoPlayerRepository implements PlayerRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO players
-                (organizer_user_id, user_id, document_id, full_name, birthdate, photo_url,
+                (organizer_user_id, user_id, document_id, full_name, alias, birthdate, photo_url,
                  phone, created_at, updated_at)
              VALUES
-                (:organizer_user_id, :user_id, :document_id, :full_name, :birthdate, :photo_url,
+                (:organizer_user_id, :user_id, :document_id, :full_name, :alias, :birthdate, :photo_url,
                  :phone, NOW(), NOW())'
         );
         $stmt->execute([
@@ -57,6 +57,7 @@ final class PdoPlayerRepository implements PlayerRepository
             'user_id'           => $data['user_id'] ?? null,
             'document_id'       => $data['document_id'],
             'full_name'         => $data['full_name'],
+            'alias'             => $data['alias'] ?? null,
             'birthdate'         => $data['birthdate'] ?? null,
             'photo_url'         => $data['photo_url'] ?? null,
             'phone'             => $data['phone'] ?? null,
@@ -75,7 +76,7 @@ final class PdoPlayerRepository implements PlayerRepository
      */
     public function update(int $id, array $data): Player
     {
-        $allowed = ['user_id', 'full_name', 'birthdate', 'photo_url', 'phone'];
+        $allowed = ['user_id', 'full_name', 'alias', 'birthdate', 'photo_url', 'phone'];
 
         $sets = [];
         $params = ['id' => $id];
