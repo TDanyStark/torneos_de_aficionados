@@ -18,6 +18,27 @@ const intString = (opts?: { min?: number; message?: string }) =>
       opts?.min !== undefined ? `Mínimo ${opts.min}` : 'Valor inválido',
     )
 
+/**
+ * Optional bounded int-string. Empty string is allowed (treated as "unlimited"
+ * by the mappers); when present it must be an integer within [min, max].
+ */
+const optionalBoundedIntString = (opts: { min: number; max: number }) =>
+  z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine(
+      (v) => v === undefined || v === '' || /^\d+$/.test(v),
+      'Debe ser un número entero',
+    )
+    .refine(
+      (v) =>
+        v === undefined ||
+        v === '' ||
+        (Number(v) >= opts.min && Number(v) <= opts.max),
+      `Entre ${opts.min} y ${opts.max}`,
+    )
+
 /** Step 1 — basics. */
 export const basicsSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -55,6 +76,8 @@ export const configSchema = z.object({
   points_loss: intString({ min: 0 }),
   allow_late_registration: z.boolean(),
   registration_open: z.boolean(),
+  /** Fase 15 — límite de inscritos por equipo; vacío = sin límite (5-100). */
+  roster_limit: optionalBoundedIntString({ min: 5, max: 100 }),
   starts_at: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido')

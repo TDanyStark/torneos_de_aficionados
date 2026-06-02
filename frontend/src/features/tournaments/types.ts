@@ -173,6 +173,8 @@ export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
   suspension_red_card?: boolean
   suspension_double_yellow?: boolean
   registration_info?: string | null
+  /** Fase 15 — null = sin límite. */
+  roster_limit?: number | null
 }
 
 /** Fase 9 — response of POST /tournaments/{id}/logo. */

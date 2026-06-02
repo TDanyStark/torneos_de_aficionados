@@ -27,6 +27,10 @@ import {
 interface AddPlayerFormProps {
   tournamentId: number
   teamId: number
+  /** Tournament roster cap; null = unlimited. */
+  rosterLimit: number | null
+  /** Current number of players on the roster. */
+  currentCount: number
 }
 
 const KNOWN_FIELDS = [
@@ -35,6 +39,7 @@ const KNOWN_FIELDS = [
   'birthdate',
   'phone',
   'photo_url',
+  'alias',
   'shirt_number',
   'position',
 ] as const
@@ -45,8 +50,15 @@ const KNOWN_FIELDS = [
  * autocompleted as read-only and only roster fields remain editable; otherwise
  * the full personal data is requested.
  */
-export function AddPlayerForm({ tournamentId, teamId }: AddPlayerFormProps) {
+export function AddPlayerForm({
+  tournamentId,
+  teamId,
+  rosterLimit,
+  currentCount,
+}: AddPlayerFormProps) {
   const addPlayer = useAddPlayer(teamId)
+
+  const isFull = rosterLimit != null && currentCount >= rosterLimit
 
   const form = useForm<AddPlayerFormValues>({
     resolver: zodResolver(addPlayerSchema),
@@ -89,6 +101,7 @@ export function AddPlayerForm({ tournamentId, teamId }: AddPlayerFormProps) {
             ? Number(values.shirt_number)
             : null,
         position: values.position?.trim() || null,
+        alias: values.alias?.trim() || null,
         is_captain: values.is_captain,
         is_delegate: values.is_delegate,
         // Personal fields are ignored by the backend when the player exists.
@@ -249,6 +262,19 @@ export function AddPlayerForm({ tournamentId, teamId }: AddPlayerFormProps) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="alias"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Alias</FormLabel>
+                <FormControl>
+                  <Input placeholder="Opcional" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex flex-wrap gap-6">
@@ -284,8 +310,21 @@ export function AddPlayerForm({ tournamentId, teamId }: AddPlayerFormProps) {
           />
         </div>
 
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Agregando…' : 'Agregar a la plantilla'}
+        {rosterLimit != null && !isFull ? (
+          <p className="text-muted-foreground text-xs">
+            Jugadores: {currentCount}/{rosterLimit}
+          </p>
+        ) : null}
+
+        <Button
+          type="submit"
+          disabled={form.formState.isSubmitting || isFull}
+        >
+          {isFull
+            ? `Plantilla llena (${currentCount}/${rosterLimit})`
+            : form.formState.isSubmitting
+              ? 'Agregando…'
+              : 'Agregar a la plantilla'}
         </Button>
       </form>
     </Form>

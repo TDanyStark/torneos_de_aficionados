@@ -423,6 +423,28 @@ export function TournamentEditPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="roster_limit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Límite de inscritos por equipo</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={100}
+                        placeholder="Sin límite"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Entre 5 y 100, o vacío para sin límite.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 

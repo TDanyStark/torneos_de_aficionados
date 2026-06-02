@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { CheckCircle2, LogIn, Trophy } from 'lucide-react'
+import { CheckCircle2, Info, LogIn, Trophy } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -12,6 +13,9 @@ import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/shared/StateMessage'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { SelfRegistrationForm } from '@/features/teams/components/SelfRegistrationForm'
+import { apiClient } from '@/lib/apiClient'
+import { tournamentKeys } from '@/features/tournaments/api/useTournaments'
+import type { Tournament } from '@/features/tournaments/types'
 import { useAuthStore } from '@/stores/authStore'
 import type { Registration } from '@/features/teams/types'
 
@@ -41,6 +45,17 @@ export function SelfRegistrationPage() {
     Boolean(tournamentId) &&
     Number.isFinite(numericTournamentId) &&
     numericTournamentId > 0
+
+  // The /tournaments/by-id/{id} endpoint is authed, so we only fetch the
+  // tournament (to surface registration_info) once the user is logged in.
+  const tournamentQuery = useQuery({
+    queryKey: [...tournamentKeys.all, 'by-id', numericTournamentId],
+    enabled: hasTournamentContext && Boolean(token),
+    queryFn: () =>
+      apiClient.get<Tournament>(`/tournaments/by-id/${numericTournamentId}`),
+  })
+
+  const registrationInfo = tournamentQuery.data?.registration_info?.trim()
 
   return (
     <div className="bg-background min-h-screen">
@@ -114,6 +129,12 @@ export function SelfRegistrationPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {registrationInfo ? (
+                <div className="bg-muted/50 text-muted-foreground mb-5 flex gap-3 rounded-md border p-3 text-sm">
+                  <Info className="text-brand mt-0.5 size-4 shrink-0" />
+                  <p className="whitespace-pre-line">{registrationInfo}</p>
+                </div>
+              ) : null}
               <SelfRegistrationForm
                 tournamentId={numericTournamentId}
                 registrationCode={registrationCode ?? ''}

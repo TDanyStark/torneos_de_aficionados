@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Card,
@@ -7,6 +8,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ErrorState } from '@/components/shared/StateMessage'
+import { apiClient } from '@/lib/apiClient'
+import { tournamentKeys } from '@/features/tournaments/api/useTournaments'
+import type { Tournament } from '@/features/tournaments/types'
 import { useTeam } from '../api/useTeams'
 import {
   useRoster,
@@ -27,6 +31,19 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
   const roster = useRoster(teamId)
   const deleteTeamPlayer = useDeleteTeamPlayer(teamId)
   const [removingId, setRemovingId] = useState<number | null>(null)
+
+  // Read the tournament roster cap to gate the add-player form (same
+  // /tournaments/by-id/{id} pattern used by the edit page; this surface is
+  // for logged-in organizers/delegates).
+  const tournamentQuery = useQuery({
+    queryKey: [...tournamentKeys.all, 'by-id', tournamentId],
+    enabled: Number.isFinite(tournamentId) && tournamentId > 0,
+    queryFn: () =>
+      apiClient.get<Tournament>(`/tournaments/by-id/${tournamentId}`),
+  })
+
+  const rosterLimit = tournamentQuery.data?.roster_limit ?? null
+  const currentCount = roster.data?.length ?? 0
 
   const onRemovePlayer = async (teamPlayerId: number) => {
     setRemovingId(teamPlayerId)
@@ -64,7 +81,12 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
           <CardTitle>Plantilla</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <AddPlayerForm tournamentId={tournamentId} teamId={teamId} />
+          <AddPlayerForm
+            tournamentId={tournamentId}
+            teamId={teamId}
+            rosterLimit={rosterLimit}
+            currentCount={currentCount}
+          />
           {roster.isLoading ? (
             <p className="text-muted-foreground text-sm">Cargando plantilla…</p>
           ) : roster.isError ? (

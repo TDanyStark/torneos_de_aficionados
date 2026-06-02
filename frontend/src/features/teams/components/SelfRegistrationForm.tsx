@@ -159,6 +159,19 @@ export function SelfRegistrationForm({
               )}
             />
           </div>
+          <FormField
+            control={form.control}
+            name="coach_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Entrenador</FormLabel>
+                <FormControl>
+                  <Input placeholder="Opcional" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <FormField
@@ -233,6 +246,19 @@ export function SelfRegistrationForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Opcional" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="alias"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alias</FormLabel>
                     <FormControl>
                       <Input placeholder="Opcional" {...field} />
                     </FormControl>

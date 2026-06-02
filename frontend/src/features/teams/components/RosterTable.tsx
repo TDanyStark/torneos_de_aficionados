@@ -52,6 +52,7 @@ export function RosterTable({ players, onRemove, removingId }: RosterTableProps)
             <p className="text-muted-foreground text-xs">
               Cédula {p.document_id}
               {p.position ? ` · ${p.position}` : ''}
+              {` · Alias: ${p.alias ?? '—'}`}
             </p>
           </div>
 
