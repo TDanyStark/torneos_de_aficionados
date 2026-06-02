@@ -25,15 +25,14 @@ const HEIGHT_BY_PLACEMENT: Record<AdPlacement, string> = {
  */
 export function AdVideo({ creative, placement }: AdVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
+  // When IntersectionObserver is unavailable (SSR/old browsers), load eagerly.
+  const [inView, setInView] = useState(
+    () => typeof IntersectionObserver === 'undefined',
+  )
 
   useEffect(() => {
     const node = containerRef.current
     if (!node || inView) return
-    if (typeof IntersectionObserver === 'undefined') {
-      setInView(true)
-      return
-    }
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {

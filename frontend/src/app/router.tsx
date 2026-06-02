@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { AdminRoute } from '@/components/layout/AdminRoute'
 import { TournamentListPage } from '@/pages/TournamentListPage'
 import { TournamentDetailPage } from '@/pages/TournamentDetailPage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -23,6 +24,7 @@ import { PublicMatchPage } from '@/pages/PublicMatchPage'
 import { RefereeMatchPage } from '@/pages/RefereeMatchPage'
 import { TopScorersPage } from '@/pages/TopScorersPage'
 import { DisciplinePage } from '@/pages/DisciplinePage'
+import { AdminAdsPage } from '@/pages/AdminAdsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -94,6 +96,12 @@ export const router = createBrowserRouter([
             element: <RefereeMatchPage />,
           },
         ],
+      },
+
+      // Global admin area (platform admins only). Gated by AdminRoute.
+      {
+        element: <AdminRoute />,
+        children: [{ path: '/admin/ads', element: <AdminAdsPage /> }],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Trophy } from 'lucide-react'
+import { Megaphone, Trophy } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, useIsAdmin } from '@/stores/authStore'
 
 export function AppHeader() {
   const navigate = useNavigate()
@@ -11,6 +11,7 @@ export function AppHeader() {
   const user = useAuthStore((s) => s.user)
   const token = useAuthStore((s) => s.token)
   const clear = useAuthStore((s) => s.clear)
+  const isAdmin = useIsAdmin()
 
   const onLogout = () => {
     clear()
@@ -31,6 +32,14 @@ export function AppHeader() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/dashboard">Mis torneos</Link>
               </Button>
+              {isAdmin ? (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/admin/ads" className="flex items-center gap-1.5">
+                    <Megaphone className="size-4" />
+                    <span className="hidden sm:inline">Publicidad</span>
+                  </Link>
+                </Button>
+              ) : null}
               <ThemeToggle />
               <span className="text-muted-foreground ml-1 hidden text-sm sm:inline">
                 {user?.name ?? user?.email}

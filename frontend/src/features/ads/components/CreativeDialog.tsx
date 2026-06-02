@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import {
@@ -63,7 +63,6 @@ export function CreativeDialog({
     reset,
     setError,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<AdCreativeFormValues>({
     resolver: zodResolver(adCreativeSchema),
@@ -78,8 +77,8 @@ export function CreativeDialog({
     }
   }, [open, creative, reset])
 
-  const mediaUrlValue = watch('media_url')
-  const mediaType = watch('media_type')
+  const mediaUrlValue = useWatch({ control, name: 'media_url' })
+  const mediaType = useWatch({ control, name: 'media_type' })
 
   const submit = handleSubmit(async (values) => {
     try {
