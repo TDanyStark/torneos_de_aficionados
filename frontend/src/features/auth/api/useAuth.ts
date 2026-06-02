@@ -26,11 +26,14 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (payload: LoginPayload) => {
-      const res = await apiClient.request<ApiSuccess<LoginResponse>>('/login', {
-        method: 'POST',
-        body: payload,
-        anonymous: true,
-      })
+      const res = await apiClient.request<ApiSuccess<LoginResponse>>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: payload,
+          anonymous: true,
+        },
+      )
       return res.data
     },
     onSuccess: (data) => {
@@ -76,7 +79,7 @@ export function useMe() {
     enabled: Boolean(token),
     queryFn: async () => {
       try {
-        const me = await apiClient.get<MeResponse>('/me')
+        const me = await apiClient.get<MeResponse>('/auth/me')
         setSession(me.user, me.roles ?? [])
         return me
       } catch (error) {
