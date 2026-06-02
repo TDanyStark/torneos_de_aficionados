@@ -17,6 +17,20 @@ const HEIGHT_BY_PLACEMENT: Record<AdPlacement, string> = {
 }
 
 /**
+ * Derives the <source> MIME hint from the media URL's file extension.
+ * Backend accepts both video/mp4 and video/webm. Returns `undefined` for
+ * unknown extensions so we OMIT the type attribute and let the browser sniff,
+ * rather than guessing mp4 (which can break webm playback in strict browsers).
+ */
+function videoMimeFromUrl(url: string): 'video/mp4' | 'video/webm' | undefined {
+  const path = url.split(/[?#]/, 1)[0]
+  const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase()
+  if (ext === 'webm') return 'video/webm'
+  if (ext === 'mp4') return 'video/mp4'
+  return undefined
+}
+
+/**
  * Renders a sold video creative. The <source> is mounted ONLY once the element
  * scrolls into view (IntersectionObserver), so off-screen videos don't download
  * on mobile. We DON'T autoplay (conservative on mobile data); native controls
@@ -59,7 +73,10 @@ export function AdVideo({ creative, placement }: AdVideoProps) {
         )}
       >
         {inView ? (
-          <source src={mediaUrl(creative.media_url)} type="video/mp4" />
+          <source
+            src={mediaUrl(creative.media_url)}
+            type={videoMimeFromUrl(creative.media_url)}
+          />
         ) : null}
       </video>
     </div>
