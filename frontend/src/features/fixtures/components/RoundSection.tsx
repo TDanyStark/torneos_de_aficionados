@@ -7,6 +7,8 @@ interface RoundSectionProps {
   fallbackNumber: number
   matches: Match[]
   nameOf: (teamId: number | null | undefined) => string
+  /** Surface a referee entry-point on each match row. */
+  showRefereeLink?: boolean
 }
 
 function formatRoundDate(value: string | null | undefined): string | null {
@@ -26,6 +28,7 @@ export function RoundSection({
   fallbackNumber,
   matches,
   nameOf,
+  showRefereeLink,
 }: RoundSectionProps) {
   const title =
     round?.name?.trim() || `Jornada ${round?.number ?? fallbackNumber}`
@@ -43,7 +46,12 @@ export function RoundSection({
       </div>
       <div className="space-y-2">
         {matches.map((m) => (
-          <MatchRow key={m.id} match={m} nameOf={nameOf} />
+          <MatchRow
+            key={m.id}
+            match={m}
+            nameOf={nameOf}
+            showRefereeLink={showRefereeLink}
+          />
         ))}
       </div>
     </section>

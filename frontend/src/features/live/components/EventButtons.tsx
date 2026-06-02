@@ -42,41 +42,12 @@ export function EventButtons({
   const homeId = home_team_id ?? 0
   const awayId = away_team_id ?? 0
 
-  const TeamPair = ({
-    type,
-    label,
-  }: {
-    type: RecordableEventType
-    label: string
-  }) => (
-    <div className="space-y-1.5">
-      <p className="text-muted-foreground text-xs font-medium">{label}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="outline"
-          className="h-14 flex-col gap-0.5"
-          disabled={disabled || homeId === 0}
-          onClick={() => open(type, home_team_id)}
-        >
-          {eventIcon(type, 'size-5')}
-          <span className="max-w-full truncate text-xs">
-            {nameOf(home_team_id)}
-          </span>
-        </Button>
-        <Button
-          variant="outline"
-          className="h-14 flex-col gap-0.5"
-          disabled={disabled || awayId === 0}
-          onClick={() => open(type, away_team_id)}
-        >
-          {eventIcon(type, 'size-5')}
-          <span className="max-w-full truncate text-xs">
-            {nameOf(away_team_id)}
-          </span>
-        </Button>
-      </div>
-    </div>
-  )
+  const pairs: { type: RecordableEventType; label: string }[] = [
+    { type: 'goal', label: 'Gol' },
+    { type: 'own_goal', label: 'Autogol' },
+    { type: 'yellow_card', label: 'Tarjeta amarilla' },
+    { type: 'red_card', label: 'Tarjeta roja' },
+  ]
 
   return (
     <Card>
@@ -84,10 +55,35 @@ export function EventButtons({
         <CardTitle className="text-base">Registrar evento</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <TeamPair type="goal" label="Gol" />
-        <TeamPair type="own_goal" label="Autogol" />
-        <TeamPair type="yellow_card" label="Tarjeta amarilla" />
-        <TeamPair type="red_card" label="Tarjeta roja" />
+        {pairs.map(({ type, label }) => (
+          <div key={type} className="space-y-1.5">
+            <p className="text-muted-foreground text-xs font-medium">{label}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="h-14 flex-col gap-0.5"
+                disabled={disabled || homeId === 0}
+                onClick={() => open(type, home_team_id)}
+              >
+                {eventIcon(type, 'size-5')}
+                <span className="max-w-full truncate text-xs">
+                  {nameOf(home_team_id)}
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-14 flex-col gap-0.5"
+                disabled={disabled || awayId === 0}
+                onClick={() => open(type, away_team_id)}
+              >
+                {eventIcon(type, 'size-5')}
+                <span className="max-w-full truncate text-xs">
+                  {nameOf(away_team_id)}
+                </span>
+              </Button>
+            </div>
+          </div>
+        ))}
       </CardContent>
 
       {selection ? (

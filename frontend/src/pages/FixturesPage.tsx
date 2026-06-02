@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
 import { useStages } from '@/features/tournaments/api/useStages'
+import { useAuthStore } from '@/stores/authStore'
 import { useFixtureFilters } from '@/features/fixtures/hooks/useFixtureFilters'
 import { useRounds } from '@/features/fixtures/api/useRounds'
 import { useMatches } from '@/features/fixtures/api/useMatches'
@@ -20,6 +21,14 @@ export function FixturesPage() {
   const { slug } = useParams<{ slug: string }>()
   const tournament = useTournamentDetail(slug)
   const tournamentId = tournament.data?.id ?? 0
+
+  const roles = useAuthStore((s) => s.roles)
+  // Show the referee entry-point to organizers and referees of this tournament.
+  const canReferee = roles.some(
+    (r) =>
+      r.tournament_id === tournamentId &&
+      (r.role === 'organizer' || r.role === 'referee'),
+  )
 
   const { filters, setFilters } = useFixtureFilters()
   const stages = useStages(tournamentId || undefined)
@@ -118,6 +127,7 @@ export function FixturesPage() {
                 fallbackNumber={number}
                 matches={roundMatches}
                 nameOf={nameOf}
+                showRefereeLink={canReferee}
               />
             )
           })}
