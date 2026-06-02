@@ -58,10 +58,16 @@ async function request<TResponse>(
 ): Promise<TResponse> {
   const { method = 'GET', body, query, anonymous, signal } = options
 
+  // FormData bodies (multipart uploads) must NOT be JSON-serialized and must
+  // not carry an explicit Content-Type — the browser sets the multipart
+  // boundary automatically.
+  const isFormData =
+    typeof FormData !== 'undefined' && body instanceof FormData
+
   const headers: Record<string, string> = {
     Accept: 'application/json',
   }
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json'
   }
   if (!anonymous) {
@@ -72,7 +78,12 @@ async function request<TResponse>(
   const response = await fetch(buildUrl(path, query), {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? (body as FormData)
+          : JSON.stringify(body),
     signal,
   })
 
@@ -129,6 +140,14 @@ export const apiClient = {
 
   post: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     unwrap<T>(path, { ...options, method: 'POST', body }),
+
+  /**
+   * Multipart POST (file uploads). Sends a `FormData` body and unwraps the
+   * `{ success, data }` envelope like {@link post}. Content-Type is left for the
+   * browser to set (multipart boundary). Bearer auth still applies.
+   */
+  postForm: <T>(path: string, formData: FormData) =>
+    unwrap<T>(path, { method: 'POST', body: formData }),
 
   put: <T>(path: string, body?: unknown) =>
     unwrap<T>(path, { method: 'PUT', body }),

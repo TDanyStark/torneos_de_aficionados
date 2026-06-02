@@ -15,6 +15,7 @@ import { GroupSelect } from '@/features/fixtures/components/GroupSelect'
 import { RoundNavigator } from '@/features/fixtures/components/RoundNavigator'
 import { RoundSection } from '@/features/fixtures/components/RoundSection'
 import { FixtureSkeleton } from '@/features/fixtures/components/FixtureSkeleton'
+import { AdSlot } from '@/components/shared/ads/AdSlot'
 import type { Match, Round } from '@/features/fixtures/types'
 
 export function FixturesPage() {
@@ -116,19 +117,29 @@ export function FixturesPage() {
         />
       ) : (
         <div className="space-y-6">
-          {grouped.map(([number, roundMatches]) => {
+          {grouped.map(([number, roundMatches], index) => {
             const round = (rounds.data ?? []).find(
               (r) => r.number === number,
             )
+            // Insert one between-matches ad roughly mid-list (after the first
+            // round when there's more than one). Renders nothing if unsold.
+            const showAd = index === 0 && grouped.length > 1
             return (
-              <RoundSection
-                key={number}
-                round={round}
-                fallbackNumber={number}
-                matches={roundMatches}
-                nameOf={nameOf}
-                showRefereeLink={canReferee}
-              />
+              <div key={number} className="space-y-6">
+                <RoundSection
+                  round={round}
+                  fallbackNumber={number}
+                  matches={roundMatches}
+                  nameOf={nameOf}
+                  showRefereeLink={canReferee}
+                />
+                {showAd && tournamentId > 0 ? (
+                  <AdSlot
+                    placement="between_matches"
+                    tournamentId={tournamentId}
+                  />
+                ) : null}
+              </div>
             )
           })}
         </div>

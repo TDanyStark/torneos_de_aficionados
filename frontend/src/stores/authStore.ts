@@ -16,6 +16,8 @@ interface AuthState {
   clear: () => void
   /** Convenience selectors. */
   isAuthenticated: () => boolean
+  /** True when the current user is a platform admin (gates the ads panel). */
+  isAdmin: () => boolean
   hasRoleInTournament: (
     tournamentId: number,
     role: TournamentRoleName,
@@ -32,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
       setSession: (user, roles) => set({ user, roles }),
       clear: () => set({ token: null, user: null, roles: [] }),
       isAuthenticated: () => Boolean(get().token),
+      isAdmin: () => get().user?.is_admin === true,
       hasRoleInTournament: (tournamentId, role) =>
         get().roles.some(
           (r) => r.tournament_id === tournamentId && r.role === role,
@@ -48,3 +51,11 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 )
+
+/**
+ * Reactive admin selector. Subscribes to `user.is_admin` so components
+ * re-render when the session (re)hydrates from /me. Prefer this over calling
+ * `isAdmin()` in render, which would not re-subscribe to user changes.
+ */
+export const useIsAdmin = (): boolean =>
+  useAuthStore((s) => s.user?.is_admin === true)

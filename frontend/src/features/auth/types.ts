@@ -17,6 +17,11 @@ export interface AuthUser {
   id: number
   name: string
   email: string
+  /**
+   * Platform admin flag. The backend /me serializes this as a REAL boolean
+   * (true/false), unlike entity tinyints. Gates the global ad-management panel.
+   */
+  is_admin: boolean
   created_at?: string
   updated_at?: string
 }

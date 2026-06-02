@@ -9,6 +9,7 @@ import { useLiveMatch } from '@/features/live/api/useLiveMatch'
 import { LiveScoreboard } from '@/features/live/components/LiveScoreboard'
 import { LiveTimeline } from '@/features/live/components/LiveTimeline'
 import { RefreshButton } from '@/features/live/components/RefreshButton'
+import { AdSlot } from '@/components/shared/ads/AdSlot'
 
 export function PublicMatchPage() {
   const { id } = useParams<{ id: string }>()
@@ -50,6 +51,12 @@ export function PublicMatchPage() {
       </div>
 
       <LiveScoreboard snapshot={snapshot} nameOf={nameOf} />
+
+      {/* In-match ad between scoreboard and timeline (renders nothing if unsold). */}
+      <AdSlot
+        placement="match_live"
+        tournamentId={snapshot.match.tournament_id}
+      />
 
       <Card>
         <CardHeader>
