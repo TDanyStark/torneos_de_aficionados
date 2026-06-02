@@ -31,10 +31,12 @@ const KNOWN_FIELDS = [
   'team_name',
   'short_name',
   'logo_url',
+  'coach_name',
   'document_id',
   'full_name',
   'birthdate',
   'phone',
+  'alias',
   'shirt_number',
   'position',
 ] as const
@@ -86,6 +88,7 @@ export function SelfRegistrationForm({
         team_name: values.team_name.trim(),
         short_name: values.short_name?.trim() || null,
         logo_url: values.logo_url?.trim() || null,
+        coach_name: values.coach_name?.trim() || null,
         is_player: isPlayer,
         ...(isPlayer
           ? {
@@ -93,6 +96,7 @@ export function SelfRegistrationForm({
               full_name: values.full_name?.trim(),
               birthdate: values.birthdate?.trim() || null,
               phone: values.phone?.trim() || null,
+              alias: values.alias?.trim() || null,
               shirt_number:
                 values.shirt_number && values.shirt_number !== ''
                   ? Number(values.shirt_number)

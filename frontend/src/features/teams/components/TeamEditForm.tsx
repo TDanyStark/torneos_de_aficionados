@@ -27,6 +27,7 @@ export function TeamEditForm({ team }: { team: Team }) {
       name: team.name,
       short_name: team.short_name ?? '',
       logo_url: team.logo_url ?? '',
+      coach_name: team.coach_name ?? '',
     },
   })
 
@@ -36,6 +37,7 @@ export function TeamEditForm({ team }: { team: Team }) {
         name: values.name,
         short_name: values.short_name?.trim() || null,
         logo_url: values.logo_url?.trim() || null,
+        coach_name: values.coach_name?.trim() || null,
       })
       toast.success('Equipo actualizado')
     } catch (error) {
@@ -81,6 +83,19 @@ export function TeamEditForm({ team }: { team: Team }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Logo (URL)</FormLabel>
+              <FormControl>
+                <Input placeholder="Opcional" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="coach_name"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Entrenador</FormLabel>
               <FormControl>
                 <Input placeholder="Opcional" {...field} />
               </FormControl>
