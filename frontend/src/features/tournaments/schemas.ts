@@ -47,7 +47,11 @@ export const configSchema = z.object({
   points_loss: intString({ min: 0 }),
   allow_late_registration: z.boolean(),
   registration_open: z.boolean(),
-  starts_at: z.string().optional().or(z.literal('')),
+  starts_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido')
+    .optional()
+    .or(z.literal('')),
   timezone: z.string().optional().or(z.literal('')),
 })
 
