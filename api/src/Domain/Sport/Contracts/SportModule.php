@@ -42,4 +42,30 @@ interface SportModule
      * keeping the table structure (rows, order, positions) generic.
      */
     public function standingsStrategy(): StandingsStrategy;
+
+    /**
+     * Derives the live score of a match from its event stream. Keeps live-score
+     * rules (e.g. own goals crediting the opponent) inside the sport module so
+     * the core stays sport-agnostic.
+     *
+     * @param array<int,array<string,mixed>|object> $events events with 'type'
+     *                                                       and 'team_id'
+     *
+     * @return array{home:int,away:int}
+     */
+    public function liveScore(array $events, ?int $homeTeamId, ?int $awayTeamId): array;
+
+    /**
+     * Consolidates a final result from home/away scores, deriving the winning
+     * team id (null on draw). Uses allowsDraws() to decide whether a level score
+     * is a legitimate draw.
+     *
+     * @return array{home_score:int,away_score:int,winner_team_id:?int}
+     */
+    public function consolidateResult(
+        int $home,
+        int $away,
+        ?int $homeTeamId,
+        ?int $awayTeamId
+    ): array;
 }

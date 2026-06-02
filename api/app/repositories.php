@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Domain\AdvancementRule\AdvancementRuleRepository;
 use App\Domain\Fixture\BracketSlotRepository;
+use App\Domain\Fixture\MatchEventRepository;
+use App\Domain\Fixture\MatchPeriodRepository;
 use App\Domain\Fixture\MatchRepository;
 use App\Domain\Fixture\RoundRepository;
 use App\Domain\Group\GroupRepository;
@@ -19,6 +21,8 @@ use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\UserRepository;
 use App\Infrastructure\Persistence\AdvancementRule\PdoAdvancementRuleRepository;
 use App\Infrastructure\Persistence\Fixture\PdoBracketSlotRepository;
+use App\Infrastructure\Persistence\Fixture\PdoMatchEventRepository;
+use App\Infrastructure\Persistence\Fixture\PdoMatchPeriodRepository;
 use App\Infrastructure\Persistence\Fixture\PdoMatchRepository;
 use App\Infrastructure\Persistence\Fixture\PdoRoundRepository;
 use App\Infrastructure\Persistence\Group\PdoGroupRepository;
@@ -52,5 +56,7 @@ return function (ContainerBuilder $containerBuilder) {
         RoundRepository::class              => \DI\autowire(PdoRoundRepository::class),
         MatchRepository::class              => \DI\autowire(PdoMatchRepository::class),
         BracketSlotRepository::class        => \DI\autowire(PdoBracketSlotRepository::class),
+        MatchPeriodRepository::class        => \DI\autowire(PdoMatchPeriodRepository::class),
+        MatchEventRepository::class         => \DI\autowire(PdoMatchEventRepository::class),
     ]);
 };
