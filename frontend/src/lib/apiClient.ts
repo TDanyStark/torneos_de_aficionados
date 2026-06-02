@@ -133,6 +133,9 @@ export const apiClient = {
   put: <T>(path: string, body?: unknown) =>
     unwrap<T>(path, { method: 'PUT', body }),
 
+  patch: <T>(path: string, body?: unknown) =>
+    unwrap<T>(path, { method: 'PATCH', body }),
+
   delete: <T = void>(path: string) => unwrap<T>(path, { method: 'DELETE' }),
 
   /** Raw request escape hatch (e.g. anonymous login). */
