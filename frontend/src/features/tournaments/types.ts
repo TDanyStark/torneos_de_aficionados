@@ -111,6 +111,16 @@ export interface CreateTournamentPayload {
   timezone?: string | null
 }
 
+/**
+ * Minimal payload for low-friction creation. Only the sport and name are sent;
+ * the backend seeds points/periods from `sport.default_config` and leaves the
+ * rest at sensible defaults (configured later in the edit view).
+ */
+export interface CreateTournamentMinimalPayload {
+  sport_id: number
+  name: string
+}
+
 export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
   status?: TournamentStatus
 }
@@ -118,7 +128,6 @@ export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
 export interface CreateStagePayload {
   name: string
   type: StageType
-  position: number
   legs: StageLegs
   tiebreakers?: string[] | null
 }
@@ -127,7 +136,6 @@ export type UpdateStagePayload = Partial<CreateStagePayload>
 
 export interface CreateGroupPayload {
   name: string
-  position: number
 }
 
 export type UpdateGroupPayload = Partial<CreateGroupPayload>

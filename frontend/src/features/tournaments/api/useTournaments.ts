@@ -6,7 +6,7 @@ import {
 import { apiClient } from '@/lib/apiClient'
 import type { Paginated } from '@/lib/apiTypes'
 import type {
-  CreateTournamentPayload,
+  CreateTournamentMinimalPayload,
   Tournament,
   TournamentFilters,
   UpdateTournamentPayload,
@@ -51,7 +51,7 @@ export function useTournamentDetail(slug: string | undefined) {
 export function useCreateTournament() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateTournamentPayload) =>
+    mutationFn: (payload: CreateTournamentMinimalPayload) =>
       apiClient.post<Tournament>('/tournaments', payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tournamentKeys.all })

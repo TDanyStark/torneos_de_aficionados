@@ -15,6 +15,13 @@ interface TournamentRepository
 
     public function findBySlug(string $slug): ?Tournament;
 
+    /**
+     * Full tournament entities owned by a user, newest first.
+     *
+     * @return array<int,Tournament>
+     */
+    public function findByOwner(int $userId): array;
+
     public function findByRegistrationCode(string $code): ?Tournament;
 
     public function slugExists(string $slug): bool;

@@ -11,7 +11,15 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Form } from '@/components/ui/form'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form'
+import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/shared/StateMessage'
 import { apiClient } from '@/lib/apiClient'
@@ -45,7 +53,8 @@ export function TournamentEditPage() {
   } = useQuery({
     queryKey: [...tournamentKeys.all, 'by-id', tournamentId],
     enabled: Number.isFinite(tournamentId) && tournamentId > 0,
-    queryFn: () => apiClient.get<Tournament>(`/tournaments/${tournamentId}`),
+    queryFn: () =>
+      apiClient.get<Tournament>(`/tournaments/by-id/${tournamentId}`),
   })
 
   const update = useUpdateTournament(tournamentId)
@@ -101,6 +110,35 @@ export function TournamentEditPage() {
             </CardHeader>
             <CardContent>
               <ConfigFields control={form.control} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Inscripciones</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="registration_open"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <FormLabel>Inscripciones cerradas</FormLabel>
+                      <FormDescription>
+                        Al activarlo, los equipos no podrán inscribirse en el
+                        torneo.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        aria-label="Inscripciones cerradas"
+                        checked={!field.value}
+                        onCheckedChange={(closed) => field.onChange(!closed)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
           <div className="flex justify-end gap-2">

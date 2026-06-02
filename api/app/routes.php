@@ -64,8 +64,10 @@ use App\Application\Actions\TeamPlayer\ListRosterAction;
 use App\Application\Actions\TeamPlayer\UpdateTeamPlayerAction;
 use App\Application\Actions\Tournament\CreateTournamentAction;
 use App\Application\Actions\Tournament\DeleteTournamentAction;
+use App\Application\Actions\Tournament\ListMyTournamentsAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
+use App\Application\Actions\Tournament\ShowTournamentByIdAction;
 use App\Application\Actions\Tournament\UpdateTournamentAction;
 use App\Application\Middleware\AdminMiddleware;
 use App\Application\Middleware\JwtAuthMiddleware;
@@ -113,6 +115,15 @@ return function (App $app) {
         $group->group('/tournaments', function (Group $tournaments) use ($roleGuard) {
             // Public
             $tournaments->get('', ListTournamentsAction::class);
+
+            // Authed lookups by owner/id. MUST be declared BEFORE the public
+            // `/{slug}` catch-all: `mine` is a single segment and would
+            // otherwise be captured by `{slug}` and routed to ShowTournamentAction.
+            $tournaments->get('/mine', ListMyTournamentsAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $tournaments->get('/by-id/{id}', ShowTournamentByIdAction::class)
+                ->add(JwtAuthMiddleware::class);
+
             $tournaments->get('/{slug}', ShowTournamentAction::class);
 
             // Create: any authenticated user becomes organizer.

@@ -37,6 +37,24 @@ final class PdoTournamentRepository implements TournamentRepository
         return $row ? Tournament::fromRow($row) : null;
     }
 
+    /**
+     * @return array<int,Tournament>
+     */
+    public function findByOwner(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM tournaments
+             WHERE owner_user_id = :owner_user_id AND deleted_at IS NULL
+             ORDER BY updated_at DESC'
+        );
+        $stmt->execute(['owner_user_id' => $userId]);
+
+        return array_map(
+            static fn (array $row): Tournament => Tournament::fromRow($row),
+            $stmt->fetchAll()
+        );
+    }
+
     public function findByRegistrationCode(string $code): ?Tournament
     {
         $stmt = $this->pdo->prepare(

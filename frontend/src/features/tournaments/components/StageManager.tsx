@@ -45,7 +45,6 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
     defaultValues: {
       name: '',
       type: 'league',
-      position: String((stages?.length ?? 0) + 1),
       legs: '1',
     },
   })
@@ -55,18 +54,16 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
       await createStage.mutateAsync({
         name: values.name,
         type: values.type,
-        position: Number(values.position),
         legs: Number(values.legs) === 2 ? 2 : 1,
       })
       toast.success('Fase creada')
       form.reset({
         name: '',
         type: 'league',
-        position: String((stages?.length ?? 0) + 2),
         legs: '1',
       })
     } catch (error) {
-      applyApiError(error, form.setError, ['name', 'type', 'position', 'legs'])
+      applyApiError(error, form.setError, ['name', 'type', 'legs'])
     }
   }
 
@@ -144,19 +141,6 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Posición</FormLabel>
-                <FormControl>
-                  <Input type="number" min={1} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="sm:col-span-2">
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Agregar fase
@@ -183,8 +167,7 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
                 <span className="font-medium">{stage.name}</span>
                 <span className="text-muted-foreground ml-2">
                   {STAGE_TYPE_LABELS[stage.type]} ·{' '}
-                  {stage.legs === 2 ? 'Ida y vuelta' : 'Ida'} · pos.{' '}
-                  {stage.position}
+                  {stage.legs === 2 ? 'Ida y vuelta' : 'Ida'}
                 </span>
               </div>
               <Button

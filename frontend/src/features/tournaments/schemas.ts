@@ -39,6 +39,22 @@ export const basicsSchema = z.object({
 
 export type BasicsValues = z.infer<typeof basicsSchema>
 
+/**
+ * Minimal create schema — sport + name only. The backend seeds points/periods
+ * from `sport.default_config`; everything else is configured later in the edit
+ * view. Kept dedicated (not derived from the shared schemas) so the create flow
+ * stays decoupled from the full edit form.
+ */
+export const createTournamentSchema = z.object({
+  sport_id: z
+    .number({ message: 'Selecciona un deporte' })
+    .int()
+    .positive('Selecciona un deporte'),
+  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+})
+
+export type CreateTournamentValues = z.infer<typeof createTournamentSchema>
+
 /** Step 2 — configuration. */
 export const configSchema = z.object({
   periods_count: intString({ min: 1, message: 'Mínimo 1 periodo' }),
@@ -71,7 +87,6 @@ const STAGE_TYPES: [StageType, ...StageType[]] = [
 export const stageSchema = z.object({
   name: z.string().min(2, 'Nombre requerido'),
   type: z.enum(STAGE_TYPES),
-  position: intString({ min: 1 }),
   /** Stored as '1' | '2' from the select. */
   legs: z.enum(['1', '2']),
 })
@@ -81,7 +96,6 @@ export type StageFormValues = z.infer<typeof stageSchema>
 /** Group form (step 4). */
 export const groupSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
-  position: intString({ min: 1 }),
 })
 
 export type GroupFormValues = z.infer<typeof groupSchema>

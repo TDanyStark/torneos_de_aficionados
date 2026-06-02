@@ -28,19 +28,18 @@ export function GroupManager({ stageId }: { stageId: number }) {
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
-    defaultValues: { name: '', position: String((groups?.length ?? 0) + 1) },
+    defaultValues: { name: '' },
   })
 
   const onSubmit = async (values: GroupFormValues) => {
     try {
       await createGroup.mutateAsync({
         name: values.name,
-        position: Number(values.position),
       })
       toast.success('Grupo creado')
-      form.reset({ name: '', position: String((groups?.length ?? 0) + 2) })
+      form.reset({ name: '' })
     } catch (error) {
-      applyApiError(error, form.setError, ['name', 'position'])
+      applyApiError(error, form.setError, ['name'])
     }
   }
 
@@ -66,13 +65,13 @@ export function GroupManager({ stageId }: { stageId: number }) {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-3 rounded-md border p-4 sm:grid-cols-3"
+          className="grid gap-3 rounded-md border p-4"
         >
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem>
                 <FormLabel>Nombre del grupo</FormLabel>
                 <FormControl>
                   <Input placeholder="Grupo A" {...field} />
@@ -81,20 +80,7 @@ export function GroupManager({ stageId }: { stageId: number }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Posición</FormLabel>
-                <FormControl>
-                  <Input type="number" min={1} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="sm:col-span-3">
+          <div>
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Agregar grupo
             </Button>
@@ -113,12 +99,7 @@ export function GroupManager({ stageId }: { stageId: number }) {
               key={group.id}
               className="flex items-center justify-between gap-2 p-3"
             >
-              <span className="text-sm font-medium">
-                {group.name}
-                <span className="text-muted-foreground ml-2 font-normal">
-                  pos. {group.position}
-                </span>
-              </span>
+              <span className="text-sm font-medium">{group.name}</span>
               <Button
                 variant="ghost"
                 size="icon"

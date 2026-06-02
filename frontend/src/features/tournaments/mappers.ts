@@ -1,6 +1,7 @@
-import type { TournamentFormValues } from './schemas'
+import type { CreateTournamentValues, TournamentFormValues } from './schemas'
 import type {
   BackendBool,
+  CreateTournamentMinimalPayload,
   CreateTournamentPayload,
   Tournament,
 } from './types'
@@ -26,6 +27,16 @@ export function formToPayload(
     registration_open: toBool(values.registration_open),
     starts_at: emptyToNull(values.starts_at),
     timezone: emptyToNull(values.timezone),
+  }
+}
+
+/** Minimal create form values → minimal create payload (sport + name only). */
+export function createToPayload(
+  values: CreateTournamentValues,
+): CreateTournamentMinimalPayload {
+  return {
+    sport_id: values.sport_id,
+    name: values.name,
   }
 }
 

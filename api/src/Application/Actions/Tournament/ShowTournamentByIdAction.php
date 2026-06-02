@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Actions\Tournament;
+
+use App\Application\Action\ApiAction;
+use App\Application\Responder\JsonResponder;
+use App\Domain\Shared\Exception\ForbiddenException;
+use App\Domain\Shared\Exception\NotFoundException;
+use App\Domain\Tournament\TournamentRepository;
+use App\Domain\User\User;
+use Psr\Http\Message\ResponseInterface as Response;
+
+/**
+ * GET /api/v1/tournaments/by-id/{id}  (auth required, owner OR admin)
+ * Full detail of a single tournament by numeric id. Mirrors the ownership check
+ * used by UpdateTournamentAction. Distinct prefix avoids the public /{slug} route.
+ */
+final class ShowTournamentByIdAction extends ApiAction
+{
+    public function __construct(
+        JsonResponder $responder,
+        private TournamentRepository $tournaments
+    ) {
+        parent::__construct($responder);
+    }
+
+    protected function handle(): Response
+    {
+        /** @var User $user */
+        $user = $this->request->getAttribute('user');
+
+        $id = (int) $this->arg('id', '0');
+
+        $tournament = $this->tournaments->findById($id);
+        if ($tournament === null) {
+            throw new NotFoundException('Torneo no encontrado.');
+        }
+
+        if (!$user->isAdmin && $tournament->ownerUserId !== $user->id) {
+            throw new ForbiddenException('Solo el organizador propietario puede ver este torneo.');
+        }
+
+        return $this->responder->success($this->response, $tournament);
+    }
+}
