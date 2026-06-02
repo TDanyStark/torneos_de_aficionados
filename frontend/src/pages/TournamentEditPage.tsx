@@ -42,12 +42,15 @@ import {
 } from '@/features/tournaments/api/useTournaments'
 import { DateField } from '@/features/tournaments/components/DateField'
 import { LogoUploader } from '@/features/tournaments/components/LogoUploader'
+import { TournamentAdsPanel } from '@/features/ads/components/TournamentAdsPanel'
+import { useIsAdmin } from '@/stores/authStore'
 import type { Tournament } from '@/features/tournaments/types'
 
 export function TournamentEditPage() {
   const { id } = useParams<{ id: string }>()
   const tournamentId = Number(id)
   const navigate = useNavigate()
+  const isAdmin = useIsAdmin()
 
   const {
     data: tournament,
@@ -428,6 +431,18 @@ export function TournamentEditPage() {
           </div>
         </form>
       </Form>
+
+      {/* Publicidad — solo administradores de la plataforma. */}
+      {isAdmin ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Publicidad</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TournamentAdsPanel tournamentId={tournament.id} />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

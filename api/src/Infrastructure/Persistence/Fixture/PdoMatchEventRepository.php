@@ -127,8 +127,10 @@ final class PdoMatchEventRepository implements MatchEventRepository
      *
      * @return array<int,array<string,mixed>>
      */
-    public function topScorers(int $tournamentId, int $limit, int $offset): array
+    public function topScorers(int $tournamentId, int $limit, int $offset, array $stageIds = []): array
     {
+        [$stageFilterSql, $stageParams] = $this->stageFilter($stageIds);
+
         $sql = "SELECT
                     me.player_id            AS player_id,
                     p.full_name             AS player_name,
@@ -142,6 +144,7 @@ final class PdoMatchEventRepository implements MatchEventRepository
                 WHERE m.tournament_id = :tournament_id
                   AND me.type = 'goal'
                   AND me.player_id IS NOT NULL
+                  {$stageFilterSql}
                 GROUP BY me.player_id, p.full_name
                 ORDER BY goals DESC, player_name ASC
                 LIMIT :limit OFFSET :offset";
@@ -150,6 +153,9 @@ final class PdoMatchEventRepository implements MatchEventRepository
         $stmt->bindValue('tournament_id', $tournamentId, PDO::PARAM_INT);
         $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
+        foreach ($stageParams as $placeholder => $stageId) {
+            $stmt->bindValue($placeholder, $stageId, PDO::PARAM_INT);
+        }
         $stmt->execute();
 
         return array_map(static function (array $row): array {
@@ -163,8 +169,10 @@ final class PdoMatchEventRepository implements MatchEventRepository
         }, $stmt->fetchAll());
     }
 
-    public function countTopScorers(int $tournamentId): int
+    public function countTopScorers(int $tournamentId, array $stageIds = []): int
     {
+        [$stageFilterSql, $stageParams] = $this->stageFilter($stageIds);
+
         $sql = "SELECT COUNT(*) FROM (
                     SELECT me.player_id
                     FROM match_events me
@@ -172,13 +180,57 @@ final class PdoMatchEventRepository implements MatchEventRepository
                     WHERE m.tournament_id = :tournament_id
                       AND me.type = 'goal'
                       AND me.player_id IS NOT NULL
+                      {$stageFilterSql}
                     GROUP BY me.player_id
                 ) AS scorers";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['tournament_id' => $tournamentId]);
+        $stmt->bindValue('tournament_id', $tournamentId, PDO::PARAM_INT);
+        foreach ($stageParams as $placeholder => $stageId) {
+            $stmt->bindValue($placeholder, $stageId, PDO::PARAM_INT);
+        }
+        $stmt->execute();
 
         return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Build the optional "AND m.stage_id IN (...)" SQL fragment plus its bound
+     * named params from a list of stage ids. Ids are normalized to positive
+     * ints; invalid/non-positive values are dropped silently. An empty result
+     * after normalization yields an empty fragment, i.e. "all phases" (no
+     * filter) — matching the "omit = all" semantics of the endpoint.
+     *
+     * @param array<int,mixed> $stageIds
+     *
+     * @return array{0:string,1:array<string,int>} [sqlFragment, namedParams]
+     */
+    private function stageFilter(array $stageIds): array
+    {
+        $normalized = [];
+        foreach ($stageIds as $stageId) {
+            $value = (int) $stageId;
+            if ($value > 0) {
+                $normalized[$value] = $value; // dedupe by value
+            }
+        }
+
+        if ($normalized === []) {
+            return ['', []];
+        }
+
+        $placeholders = [];
+        $params = [];
+        $i = 0;
+        foreach ($normalized as $value) {
+            $key = ':stage_id_' . $i++;
+            $placeholders[] = $key;
+            $params[$key] = $value;
+        }
+
+        $sql = 'AND m.stage_id IN (' . implode(', ', $placeholders) . ')';
+
+        return [$sql, $params];
     }
 
     /**

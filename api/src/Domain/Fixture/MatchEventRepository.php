@@ -45,16 +45,25 @@ interface MatchEventRepository
      * own_goal does NOT count for the scorer). One row per player, ordered by
      * goals DESC. Scope: events whose match.tournament_id = $tournamentId.
      *
+     * Optional phase filter: when $stageIds is non-empty, only goals from
+     * matches whose matches.stage_id is in that set are counted. An empty set
+     * means "all phases" (no filter).
+     *
      * Row shape (snake_case): player_id, player_name, team_id, team_name, goals.
+     *
+     * @param array<int,int> $stageIds positive matches.stage_id values; empty = all
      *
      * @return array<int,array<string,mixed>>
      */
-    public function topScorers(int $tournamentId, int $limit, int $offset): array;
+    public function topScorers(int $tournamentId, int $limit, int $offset, array $stageIds = []): array;
 
     /**
      * Total number of distinct scorers in the tournament (for pagination meta).
+     * Honors the same optional $stageIds phase filter as topScorers().
+     *
+     * @param array<int,int> $stageIds positive matches.stage_id values; empty = all
      */
-    public function countTopScorers(int $tournamentId): int;
+    public function countTopScorers(int $tournamentId, array $stageIds = []): int;
 
     /**
      * Discipline per player: yellow_card and red_card counts. One row per

@@ -4,7 +4,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
-import type { Paginated } from '@/lib/apiTypes'
 import type {
   AdsMap,
   AdSlot,
@@ -22,7 +21,9 @@ export const adKeys = {
   public: () => ['ads', 'public'] as const,
   tournament: (tournamentId: number) =>
     ['ads', 'tournament', tournamentId] as const,
-  slots: (page: number) => ['ads', 'slots', page] as const,
+  /** Admin: the slots (with creatives) scoped to a single tournament. */
+  adminTournamentSlots: (tournamentId: number) =>
+    ['ads', 'admin', 'tournament', tournamentId] as const,
 }
 
 /** Ads are static-ish; refetch sparingly to avoid layout churn. */
@@ -49,18 +50,22 @@ export function useAds(tournamentId?: number) {
   })
 }
 
-/** Admin: paginated slot list (each slot carries its creatives inline). */
-export function useAdSlots(page: number) {
+/**
+ * Admin: the ad slots scoped to a single tournament (each slot carries its
+ * creatives inline). Backed by GET /admin/tournaments/{id}/ad-slots, which
+ * returns a plain (non-paginated) list. Keyed under `adKeys.all` so the
+ * shared creative/slot mutations invalidate it automatically.
+ */
+export function useTournamentAdSlots(tournamentId: number) {
   return useQuery({
-    queryKey: adKeys.slots(page),
+    queryKey: adKeys.adminTournamentSlots(tournamentId),
+    enabled: Number.isFinite(tournamentId) && tournamentId > 0,
     queryFn: ({ signal }) =>
-      apiClient.getPaginated<AdSlotWithCreatives>(
-        '/ad-slots',
-        { page },
+      apiClient.get<AdSlotWithCreatives[]>(
+        `/admin/tournaments/${tournamentId}/ad-slots`,
+        undefined,
         signal,
       ),
-    placeholderData: (prev) =>
-      prev as Paginated<AdSlotWithCreatives> | undefined,
   })
 }
 

@@ -38,12 +38,24 @@ final class TopScorersAction extends ApiAction
 
         $pagination = Pagination::fromQuery($this->query());
 
+        // Optional phase filter: ?stage_id[]=1&stage_id[]=2. Cast each to int,
+        // keep only positive values, drop invalid silently. An empty set after
+        // normalization means "all phases" (omit = all) — no 422 on bad input.
+        $stageIds = [];
+        foreach ((array) ($this->query()['stage_id'] ?? []) as $rawStageId) {
+            $stageId = (int) $rawStageId;
+            if ($stageId > 0) {
+                $stageIds[] = $stageId;
+            }
+        }
+
         $items = $this->events->topScorers(
             $tournamentId,
             $pagination->limit(),
-            $pagination->offset()
+            $pagination->offset(),
+            $stageIds
         );
-        $total = $this->events->countTopScorers($tournamentId);
+        $total = $this->events->countTopScorers($tournamentId, $stageIds);
 
         return $this->responder->paginated(
             $this->response,

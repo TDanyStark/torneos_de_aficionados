@@ -7,6 +7,7 @@ use App\Application\Actions\Ad\CreateAdSlotAction;
 use App\Application\Actions\Ad\DeleteAdCreativeAction;
 use App\Application\Actions\Ad\DeleteAdSlotAction;
 use App\Application\Actions\Ad\ListAdSlotsAction;
+use App\Application\Actions\Ad\ListTournamentAdSlotsAction;
 use App\Application\Actions\Ad\PublicAdsAction;
 use App\Application\Actions\Ad\TournamentAdsAction;
 use App\Application\Actions\Ad\UpdateAdCreativeAction;
@@ -332,6 +333,14 @@ return function (App $app) {
                 ->add(AdminMiddleware::class)
                 ->add(JwtAuthMiddleware::class);
         });
+
+        // Publicidad — admin per-tournament slot listing. Numeric {id} = the
+        // tournament id. Returns its slots (each with creatives inline), NOT
+        // paginated. Two segments under /admin/tournaments => no collision with
+        // the public /tournaments/{id}/ads or other /tournaments routes.
+        $group->get('/admin/tournaments/{id:[0-9]+}/ad-slots', ListTournamentAdSlotsAction::class)
+            ->add(AdminMiddleware::class)
+            ->add(JwtAuthMiddleware::class);
 
         // Publicidad — admin creative management + media upload.
         $group->group('/ad-creatives', function (Group $adCreatives) {
