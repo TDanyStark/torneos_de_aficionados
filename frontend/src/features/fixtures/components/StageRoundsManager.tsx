@@ -11,9 +11,12 @@ import { useRounds } from '../api/useRounds'
 import { useMatches } from '../api/useMatches'
 import { useTeamNameMap } from '../api/useTeamNameMap'
 import { useDeleteMatch, useDeleteRound } from '../api/useManualFixtures'
+import { useReferees } from '@/features/tournaments/api/useReferees'
 import { CreateRoundDialog } from './CreateRoundDialog'
 import { CreateMatchDialog } from './CreateMatchDialog'
 import { MatchStatusBadge } from './MatchStatusBadge'
+import { MatchRefereeSelect } from './MatchRefereeSelect'
+import { StageRefereeBulkAssign } from './StageRefereeBulkAssign'
 
 interface StageRoundsManagerProps {
   tournamentId: number
@@ -31,7 +34,10 @@ export function StageRoundsManager({
 }: StageRoundsManagerProps) {
   const rounds = useRounds(tournamentId)
   const matches = useMatches(tournamentId, {})
+  const referees = useReferees(tournamentId)
   const { nameOf } = useTeamNameMap(tournamentId)
+
+  const refereeList = referees.data ?? []
 
   const deleteRound = useDeleteRound(tournamentId)
   const deleteMatch = useDeleteMatch(tournamentId)
@@ -104,6 +110,12 @@ export function StageRoundsManager({
         </p>
       ) : (
         <div className="space-y-2">
+          <StageRefereeBulkAssign
+            tournamentId={tournamentId}
+            stageId={stage.id}
+            referees={refereeList}
+            rounds={stageRounds}
+          />
           {stageRounds.map((round) => {
             const roundMatches = matchesByRound.get(round.id) ?? []
             return (
