@@ -47,7 +47,10 @@ export const basicsSchema = z.object({
     .int()
     .positive('Selecciona un deporte'),
   description: z.string().max(1000).optional().or(z.literal('')),
-  logo_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  // logo_url is produced by the uploader as a RELATIVE path
+  // (e.g. /uploads/tournaments/<hex>.jpg), so it must NOT be validated as an
+  // absolute URL — that would reject valid uploaded logos.
+  logo_url: z.string().max(2048).optional().or(z.literal('')),
 })
 
 export type BasicsValues = z.infer<typeof basicsSchema>

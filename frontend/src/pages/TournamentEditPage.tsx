@@ -90,6 +90,30 @@ const FIELD_SECTION: Record<string, SectionKey> = {
   roster_limit: 'inscripciones',
 }
 
+/** Human-readable label per field, used in the validation error toast. */
+const FIELD_LABEL: Record<string, string> = {
+  name: 'Nombre del torneo',
+  sport_id: 'Deporte',
+  description: 'Descripción',
+  logo_url: 'Logo',
+  starts_at: 'Fecha de inicio',
+  ends_at: 'Fecha de finalización',
+  rules: 'Reglamento',
+  prize_first: 'Premio 1.° lugar',
+  prize_second: 'Premio 2.° lugar',
+  prize_third: 'Premio 3.° lugar',
+  prize_others: 'Otros premios',
+  periods_count: 'Periodos',
+  points_win: 'Pts. victoria',
+  points_draw: 'Pts. empate',
+  points_loss: 'Pts. derrota',
+  suspension_red_card: 'Suspensión por tarjeta roja',
+  suspension_double_yellow: 'Suspensión por doble amarilla',
+  registration_open: 'Inscripciones',
+  registration_info: 'Información para inscritos',
+  roster_limit: 'Límite de inscritos por equipo',
+}
+
 export function TournamentEditPage() {
   const { id } = useParams<{ id: string }>()
   const tournamentId = Number(id)
@@ -132,16 +156,24 @@ export function TournamentEditPage() {
   }
 
   // Surface validation failures so "Guardar" never silently does nothing:
-  // open the section that holds the first invalid field and toast the user.
+  // open every section that holds an invalid field, and name the fields in the
+  // toast so errors in collapsed sections (or fields without UI) are visible.
   const onInvalid = (errors: FieldErrors<TournamentFormValues>) => {
-    const firstField = Object.keys(errors)[0]
-    const section = firstField ? FIELD_SECTION[firstField] : undefined
-    if (section) {
-      setOpenSections((prev) =>
-        prev.includes(section) ? prev : [...prev, section],
-      )
+    const fields = Object.keys(errors)
+
+    const sections = fields
+      .map((f) => FIELD_SECTION[f])
+      .filter((s): s is SectionKey => Boolean(s))
+    if (sections.length > 0) {
+      setOpenSections((prev) => Array.from(new Set([...prev, ...sections])))
     }
-    toast.error('Revisa los campos marcados antes de guardar.')
+
+    const labels = fields.map((f) => FIELD_LABEL[f] ?? f)
+    toast.error(
+      labels.length > 0
+        ? `Revisa: ${labels.join(', ')}.`
+        : 'Revisa los campos marcados antes de guardar.',
+    )
   }
 
   if (isLoading) {
