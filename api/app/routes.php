@@ -69,6 +69,7 @@ use App\Application\Actions\Tournament\ListTournamentsAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
 use App\Application\Actions\Tournament\ShowTournamentByIdAction;
 use App\Application\Actions\Tournament\UpdateTournamentAction;
+use App\Application\Actions\Tournament\UploadTournamentLogoAction;
 use App\Application\Middleware\AdminMiddleware;
 use App\Application\Middleware\JwtAuthMiddleware;
 use App\Application\Middleware\RoleMiddlewareFactory;
@@ -134,6 +135,12 @@ return function (App $app) {
             $tournaments->put('/{id}', UpdateTournamentAction::class)
                 ->add(JwtAuthMiddleware::class);
             $tournaments->delete('/{id}', DeleteTournamentAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Logo upload (owner|admin, multipart). Numeric {id} constraint keeps
+            // it clear of the public single-segment `/{slug}` route. Two segments,
+            // so no collision regardless.
+            $tournaments->post('/{id:[0-9]+}/logo', UploadTournamentLogoAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Roles (organizer-only). {id} is the tournament id -> RoleMiddleware guards it.

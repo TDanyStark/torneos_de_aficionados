@@ -68,7 +68,24 @@ export const configSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido')
     .optional()
     .or(z.literal('')),
+  /** Fase 9 — fecha de finalización (mismo formato que starts_at). */
+  ends_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido')
+    .optional()
+    .or(z.literal('')),
   timezone: z.string().optional().or(z.literal('')),
+  /** Fase 9 — reglamento e información de inscripción (texto libre). */
+  rules: z.string().max(5000).optional().or(z.literal('')),
+  registration_info: z.string().max(5000).optional().or(z.literal('')),
+  /** Fase 9 — premios por posición (texto libre opcional). */
+  prize_first: z.string().max(255).optional().or(z.literal('')),
+  prize_second: z.string().max(255).optional().or(z.literal('')),
+  prize_third: z.string().max(255).optional().or(z.literal('')),
+  prize_others: z.string().max(255).optional().or(z.literal('')),
+  /** Fase 9 — disciplina (suspensiones). */
+  suspension_red_card: z.boolean(),
+  suspension_double_yellow: z.boolean(),
 })
 
 export type ConfigValues = z.infer<typeof configSchema>

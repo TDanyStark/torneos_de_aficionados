@@ -130,30 +130,41 @@ final class PdoTournamentRepository implements TournamentRepository
                 (sport_id, owner_user_id, name, slug, description, logo_url, status,
                  periods_count, points_win, points_draw, points_loss,
                  allow_late_registration, registration_open, registration_code,
-                 starts_at, timezone, created_at, updated_at)
+                 starts_at, ends_at, timezone, rules, prizes,
+                 suspension_red_card, suspension_double_yellow, roster_limit,
+                 registration_info, created_at, updated_at)
              VALUES
                 (:sport_id, :owner_user_id, :name, :slug, :description, :logo_url, :status,
                  :periods_count, :points_win, :points_draw, :points_loss,
                  :allow_late_registration, :registration_open, :registration_code,
-                 :starts_at, :timezone, NOW(), NOW())'
+                 :starts_at, :ends_at, :timezone, :rules, :prizes,
+                 :suspension_red_card, :suspension_double_yellow, :roster_limit,
+                 :registration_info, NOW(), NOW())'
         );
         $stmt->execute([
-            'sport_id'                => $data['sport_id'],
-            'owner_user_id'           => $data['owner_user_id'],
-            'name'                    => $data['name'],
-            'slug'                    => $data['slug'],
-            'description'             => $data['description'] ?? null,
-            'logo_url'                => $data['logo_url'] ?? null,
-            'status'                  => $data['status'] ?? 'draft',
-            'periods_count'           => $data['periods_count'],
-            'points_win'              => $data['points_win'],
-            'points_draw'             => $data['points_draw'],
-            'points_loss'             => $data['points_loss'],
-            'allow_late_registration' => !empty($data['allow_late_registration']) ? 1 : 0,
-            'registration_open'       => !empty($data['registration_open']) ? 1 : 0,
-            'registration_code'       => $data['registration_code'] ?? null,
-            'starts_at'               => $data['starts_at'] ?? null,
-            'timezone'                => $data['timezone'] ?? 'America/Bogota',
+            'sport_id'                 => $data['sport_id'],
+            'owner_user_id'            => $data['owner_user_id'],
+            'name'                     => $data['name'],
+            'slug'                     => $data['slug'],
+            'description'              => $data['description'] ?? null,
+            'logo_url'                 => $data['logo_url'] ?? null,
+            'status'                   => $data['status'] ?? 'draft',
+            'periods_count'            => $data['periods_count'],
+            'points_win'               => $data['points_win'],
+            'points_draw'              => $data['points_draw'],
+            'points_loss'              => $data['points_loss'],
+            'allow_late_registration'  => !empty($data['allow_late_registration']) ? 1 : 0,
+            'registration_open'        => !empty($data['registration_open']) ? 1 : 0,
+            'registration_code'        => $data['registration_code'] ?? null,
+            'starts_at'                => $data['starts_at'] ?? null,
+            'ends_at'                  => $data['ends_at'] ?? null,
+            'timezone'                 => $data['timezone'] ?? 'America/Bogota',
+            'rules'                    => $data['rules'] ?? null,
+            'prizes'                   => $this->encodePrizes($data['prizes'] ?? null),
+            'suspension_red_card'      => !empty($data['suspension_red_card']) ? 1 : 0,
+            'suspension_double_yellow' => !empty($data['suspension_double_yellow']) ? 1 : 0,
+            'roster_limit'             => $data['roster_limit'] ?? null,
+            'registration_info'        => $data['registration_info'] ?? null,
         ]);
 
         $id = (int) $this->pdo->lastInsertId();
@@ -172,7 +183,14 @@ final class PdoTournamentRepository implements TournamentRepository
         $allowed = [
             'name', 'description', 'logo_url', 'status', 'periods_count',
             'points_win', 'points_draw', 'points_loss', 'allow_late_registration',
-            'registration_open', 'registration_code', 'starts_at', 'timezone',
+            'registration_open', 'registration_code', 'starts_at', 'ends_at',
+            'timezone', 'rules', 'suspension_red_card', 'suspension_double_yellow',
+            'roster_limit', 'registration_info',
+        ];
+
+        $booleans = [
+            'allow_late_registration', 'registration_open',
+            'suspension_red_card', 'suspension_double_yellow',
         ];
 
         $sets = [];
@@ -181,11 +199,15 @@ final class PdoTournamentRepository implements TournamentRepository
             if (array_key_exists($field, $data)) {
                 $sets[] = "$field = :$field";
                 $value = $data[$field];
-                if (in_array($field, ['allow_late_registration', 'registration_open'], true)) {
+                if (in_array($field, $booleans, true)) {
                     $value = !empty($value) ? 1 : 0;
                 }
                 $params[$field] = $value;
             }
+        }
+        if (array_key_exists('prizes', $data)) {
+            $sets[] = 'prizes = :prizes';
+            $params['prizes'] = $this->encodePrizes($data['prizes']);
         }
 
         if ($sets !== []) {
@@ -207,6 +229,21 @@ final class PdoTournamentRepository implements TournamentRepository
             'UPDATE tournaments SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Serializes the prizes map for the JSON column. Mirrors the tiebreakers
+     * handling on PdoStageRepository: an empty/absent map collapses to NULL.
+     *
+     * @param array<string,mixed>|null $prizes
+     */
+    private function encodePrizes(?array $prizes): ?string
+    {
+        if ($prizes === null || $prizes === []) {
+            return null;
+        }
+
+        return json_encode($prizes, JSON_UNESCAPED_UNICODE);
     }
 
     /**

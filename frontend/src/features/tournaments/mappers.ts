@@ -2,18 +2,38 @@ import type { CreateTournamentValues, TournamentFormValues } from './schemas'
 import type {
   BackendBool,
   CreateTournamentMinimalPayload,
-  CreateTournamentPayload,
+  Prizes,
   Tournament,
+  UpdateTournamentPayload,
 } from './types'
 
 const toBool = (v: boolean): BackendBool => (v ? 1 : 0)
 const emptyToNull = (v: string | undefined): string | null =>
   v && v.trim() !== '' ? v : null
 
-/** Form values → create/update API payload (strings→numbers, bools→0/1). */
+/**
+ * Builds the prizes object from the flat form fields. Empty strings become
+ * omitted/null; if every placement is empty the whole map is `null` (matches
+ * the backend's normalization).
+ */
+function formToPrizes(values: TournamentFormValues): Prizes | null {
+  const first = emptyToNull(values.prize_first)
+  const second = emptyToNull(values.prize_second)
+  const third = emptyToNull(values.prize_third)
+  const others = emptyToNull(values.prize_others)
+  if (!first && !second && !third && !others) return null
+  const prizes: Prizes = {}
+  if (first) prizes.first = first
+  if (second) prizes.second = second
+  if (third) prizes.third = third
+  if (others) prizes.others = others
+  return prizes
+}
+
+/** Form values → update API payload (strings→numbers, bools→0/1, prizes map). */
 export function formToPayload(
   values: TournamentFormValues,
-): CreateTournamentPayload {
+): UpdateTournamentPayload {
   return {
     sport_id: values.sport_id,
     name: values.name,
@@ -26,7 +46,13 @@ export function formToPayload(
     allow_late_registration: toBool(values.allow_late_registration),
     registration_open: toBool(values.registration_open),
     starts_at: emptyToNull(values.starts_at),
+    ends_at: emptyToNull(values.ends_at),
     timezone: emptyToNull(values.timezone),
+    rules: emptyToNull(values.rules),
+    registration_info: emptyToNull(values.registration_info),
+    prizes: formToPrizes(values),
+    suspension_red_card: values.suspension_red_card,
+    suspension_double_yellow: values.suspension_double_yellow,
   }
 }
 
@@ -39,6 +65,12 @@ export function createToPayload(
     name: values.name,
   }
 }
+
+/**
+ * Normalizes a backend datetime to the `YYYY-MM-DD` shape the date inputs use.
+ * Backend `starts_at`/`ends_at` may include a time component.
+ */
+const toDateInput = (v: string | null): string => (v ? v.slice(0, 10) : '')
 
 /** Tournament entity → form values (numbers→strings, 0/1→boolean, null→''). */
 export function tournamentToForm(t: Tournament): TournamentFormValues {
@@ -53,8 +85,17 @@ export function tournamentToForm(t: Tournament): TournamentFormValues {
     points_loss: String(t.points_loss),
     allow_late_registration: t.allow_late_registration === 1,
     registration_open: t.registration_open === 1,
-    starts_at: t.starts_at ?? '',
+    starts_at: toDateInput(t.starts_at),
+    ends_at: toDateInput(t.ends_at),
     timezone: t.timezone ?? '',
+    rules: t.rules ?? '',
+    registration_info: t.registration_info ?? '',
+    prize_first: t.prizes?.first ?? '',
+    prize_second: t.prizes?.second ?? '',
+    prize_third: t.prizes?.third ?? '',
+    prize_others: t.prizes?.others ?? '',
+    suspension_red_card: t.suspension_red_card,
+    suspension_double_yellow: t.suspension_double_yellow,
   }
 }
 
@@ -70,5 +111,14 @@ export const DEFAULT_TOURNAMENT_FORM: TournamentFormValues = {
   allow_late_registration: false,
   registration_open: false,
   starts_at: '',
+  ends_at: '',
   timezone: '',
+  rules: '',
+  registration_info: '',
+  prize_first: '',
+  prize_second: '',
+  prize_third: '',
+  prize_others: '',
+  suspension_red_card: false,
+  suspension_double_yellow: false,
 }

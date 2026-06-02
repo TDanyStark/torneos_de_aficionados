@@ -38,6 +38,17 @@ export interface Sport {
   is_active: BackendBool
 }
 
+/**
+ * Prize map (JSON column on the backend). Each placement is an optional free
+ * text label; the backend strips empty strings and stores `null` when empty.
+ */
+export interface Prizes {
+  first?: string | null
+  second?: string | null
+  third?: string | null
+  others?: string | null
+}
+
 /** Tournament entity. */
 export interface Tournament {
   id: number
@@ -56,7 +67,20 @@ export interface Tournament {
   registration_open: BackendBool
   registration_code: string | null
   starts_at: string | null
+  /** Fase 9 — datetime string (YYYY-MM-DD or with time) or null. */
+  ends_at: string | null
   timezone: string | null
+  /** Fase 9 — free-text reglamento. */
+  rules: string | null
+  /** Fase 9 — prize map; null when no prizes configured. */
+  prizes: Prizes | null
+  /** Fase 9 — booleans emitted as JSON true/false (not tinyint). */
+  suspension_red_card: boolean
+  suspension_double_yellow: boolean
+  /** Fase 9 — null = sin límite (UI deferred to Fase 15). */
+  roster_limit: number | null
+  /** Fase 9 — información para inscritos. */
+  registration_info: string | null
   created_at: string
   updated_at: string
 }
@@ -123,6 +147,19 @@ export interface CreateTournamentMinimalPayload {
 
 export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
   status?: TournamentStatus
+  /** Fase 9 — editable enrichment fields (partial-update friendly). */
+  ends_at?: string | null
+  rules?: string | null
+  prizes?: Prizes | null
+  suspension_red_card?: boolean
+  suspension_double_yellow?: boolean
+  registration_info?: string | null
+}
+
+/** Fase 9 — response of POST /tournaments/{id}/logo. */
+export interface UploadLogoResponse {
+  logo_url: string
+  tournament: Tournament
 }
 
 export interface CreateStagePayload {

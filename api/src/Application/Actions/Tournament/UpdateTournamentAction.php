@@ -23,6 +23,12 @@ final class UpdateTournamentAction extends ApiAction
 {
     private const STATUSES = ['draft', 'registration', 'in_progress', 'finished', 'archived'];
 
+    private const ROSTER_LIMIT_MIN = 5;
+    private const ROSTER_LIMIT_MAX = 100;
+
+    /** Allowed keys inside the prizes object. */
+    private const PRIZE_KEYS = ['first', 'second', 'third', 'others'];
+
     public function __construct(
         JsonResponder $responder,
         private TournamentRepository $tournaments
@@ -95,10 +101,74 @@ final class UpdateTournamentAction extends ApiAction
                 $data['starts_at'] = $startsAt;
             }
         }
+        if (array_key_exists('ends_at', $body)) {
+            $endsAt = trim((string) $body['ends_at']);
+            if ($endsAt === '') {
+                $data['ends_at'] = null;
+            } else {
+                $normalized = $this->normalizeDateTime($endsAt);
+                if ($normalized === null) {
+                    $errors['ends_at'] =
+                        'La fecha de finalización no es válida (formato YYYY-MM-DD o YYYY-MM-DD HH:MM:SS).';
+                } else {
+                    $data['ends_at'] = $normalized;
+                }
+            }
+        }
         if (array_key_exists('timezone', $body)) {
             $tz = trim((string) $body['timezone']);
             if ($tz !== '') {
                 $data['timezone'] = $tz;
+            }
+        }
+        if (array_key_exists('rules', $body)) {
+            $rules = trim((string) $body['rules']);
+            $data['rules'] = $rules !== '' ? $rules : null;
+        }
+        if (array_key_exists('registration_info', $body)) {
+            $registrationInfo = trim((string) $body['registration_info']);
+            $data['registration_info'] = $registrationInfo !== '' ? $registrationInfo : null;
+        }
+        if (array_key_exists('suspension_red_card', $body)) {
+            $data['suspension_red_card'] = !empty($body['suspension_red_card']);
+        }
+        if (array_key_exists('suspension_double_yellow', $body)) {
+            $data['suspension_double_yellow'] = !empty($body['suspension_double_yellow']);
+        }
+        if (array_key_exists('roster_limit', $body)) {
+            $rosterLimit = $body['roster_limit'];
+            if ($rosterLimit === null || $rosterLimit === '') {
+                $data['roster_limit'] = null;
+            } else {
+                $limit = (int) $rosterLimit;
+                if ($limit < self::ROSTER_LIMIT_MIN || $limit > self::ROSTER_LIMIT_MAX) {
+                    $errors['roster_limit'] = sprintf(
+                        'El límite de jugadores debe estar entre %d y %d.',
+                        self::ROSTER_LIMIT_MIN,
+                        self::ROSTER_LIMIT_MAX
+                    );
+                } else {
+                    $data['roster_limit'] = $limit;
+                }
+            }
+        }
+        if (array_key_exists('prizes', $body)) {
+            $prizes = $body['prizes'];
+            if ($prizes === null || $prizes === '' || $prizes === []) {
+                $data['prizes'] = null;
+            } elseif (!is_array($prizes)) {
+                $errors['prizes'] = 'Los premios deben ser un objeto con claves first, second, third u others.';
+            } else {
+                $clean = [];
+                foreach (self::PRIZE_KEYS as $key) {
+                    if (array_key_exists($key, $prizes)) {
+                        $value = trim((string) $prizes[$key]);
+                        if ($value !== '') {
+                            $clean[$key] = $value;
+                        }
+                    }
+                }
+                $data['prizes'] = $clean !== [] ? $clean : null;
             }
         }
 
@@ -137,5 +207,24 @@ final class UpdateTournamentAction extends ApiAction
         $d = \DateTime::createFromFormat('Y-m-d', $date);
 
         return $d !== false && $d->format('Y-m-d') === $date;
+    }
+
+    /**
+     * Accepts a date (YYYY-MM-DD) or a datetime (YYYY-MM-DD HH:MM:SS) and returns
+     * a normalized DATETIME string (YYYY-MM-DD HH:MM:SS), or null when invalid.
+     */
+    private function normalizeDateTime(string $value): ?string
+    {
+        $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $value);
+        if ($dt !== false && $dt->format('Y-m-d H:i:s') === $value) {
+            return $value;
+        }
+
+        $d = \DateTime::createFromFormat('Y-m-d', $value);
+        if ($d !== false && $d->format('Y-m-d') === $value) {
+            return $value . ' 00:00:00';
+        }
+
+        return null;
     }
 }
