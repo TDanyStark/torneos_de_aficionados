@@ -77,6 +77,36 @@ export interface UpdateMatchPayload {
 }
 
 /* ------------------------------------------------------------------ */
+/* Manual fixtures CRUD (Fase 14, organizer mutations)                 */
+/* ------------------------------------------------------------------ */
+
+/** POST /stages/{id}/rounds — `number` auto-assigns (max+1) when omitted. */
+export interface CreateRoundPayload {
+  number?: number
+  name?: string | null
+  group_id?: number | null
+  scheduled_date?: string | null
+  status?: RoundStatus
+}
+
+/** PUT /rounds/{id} — partial update of a round. */
+export type UpdateRoundPayload = Partial<CreateRoundPayload>
+
+/**
+ * POST /rounds/{id}/matches — manual match creation. Teams are nullable (TBD),
+ * repeated pairings are allowed, but home === away is rejected server-side.
+ */
+export interface CreateMatchPayload {
+  home_team_id?: number | null
+  away_team_id?: number | null
+  group_id?: number | null
+  leg?: number
+  venue?: string | null
+  scheduled_at?: string | null
+  referee_user_id?: number | null
+}
+
+/* ------------------------------------------------------------------ */
 /* Standings (tabla de posiciones)                                     */
 /* ------------------------------------------------------------------ */
 

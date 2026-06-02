@@ -20,12 +20,17 @@ use App\Application\Actions\AdvancementRule\UpdateAdvancementRuleAction;
 use App\Application\Actions\Auth\LoginAction;
 use App\Application\Actions\Auth\MeAction;
 use App\Application\Actions\Auth\RegisterAction;
+use App\Application\Actions\Fixture\CreateMatchAction;
+use App\Application\Actions\Fixture\CreateRoundAction;
+use App\Application\Actions\Fixture\DeleteMatchAction;
+use App\Application\Actions\Fixture\DeleteRoundAction;
 use App\Application\Actions\Fixture\GenerateFixturesAction;
 use App\Application\Actions\Fixture\GroupStandingsAction;
 use App\Application\Actions\Fixture\ListMatchesAction;
 use App\Application\Actions\Fixture\ListRoundsAction;
 use App\Application\Actions\Fixture\RegenerateFixturesAction;
 use App\Application\Actions\Fixture\UpdateMatchAction;
+use App\Application\Actions\Fixture\UpdateRoundAction;
 use App\Application\Actions\Group\CreateGroupAction;
 use App\Application\Actions\Group\DistributeGroupsAction;
 use App\Application\Actions\Live\CardsAction;
@@ -224,6 +229,25 @@ return function (App $app) {
                 ->add(JwtAuthMiddleware::class);
             $stages->post('/{id}/regenerate-fixtures', RegenerateFixturesAction::class)
                 ->add(JwtAuthMiddleware::class);
+
+            // Manual rounds (Fase 14). {id} is the stage id -> tournament
+            // resolved + authorized inside the action. Two segments after the
+            // stage id => no collision with the single-segment routes above.
+            $stages->post('/{id}/rounds', CreateRoundAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Rounds module (Fase 14). {id} is the round id -> tournament resolved
+        // via round -> stage and authorized inside the action.
+        $group->group('/rounds', function (Group $rounds) {
+            $rounds->put('/{id}', UpdateRoundAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $rounds->delete('/{id}', DeleteRoundAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Manual match creation under a round.
+            $rounds->post('/{id}/matches', CreateMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Groups module ({id} is the group id -> authorized inside action).
@@ -296,6 +320,10 @@ return function (App $app) {
         // MatchRefereeAuthorizer (inline). The live read model is public.
         $group->group('/matches', function (Group $matches) {
             $matches->put('/{id}', UpdateMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Manual match deletion (Fase 14). Refuses consolidated matches.
+            $matches->delete('/{id}', DeleteMatchAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Live control (referee).

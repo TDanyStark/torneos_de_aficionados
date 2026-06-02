@@ -5,7 +5,7 @@ import { roundKeys } from './useRounds'
 import { matchKeys } from './useMatches'
 
 /** Invalidate every fixtures-derived query for a tournament after a mutation. */
-function invalidateFixtures(
+export function invalidateFixtures(
   qc: ReturnType<typeof useQueryClient>,
   tournamentId: number,
 ) {
