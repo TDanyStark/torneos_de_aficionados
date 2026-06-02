@@ -18,14 +18,6 @@ const intString = (opts?: { min?: number; message?: string }) =>
       opts?.min !== undefined ? `Mínimo ${opts.min}` : 'Valor inválido',
     )
 
-const optionalIntString = z
-  .string()
-  .optional()
-  .refine(
-    (v) => v === undefined || v === '' || /^\d+$/.test(v),
-    'Debe ser un número entero',
-  )
-
 /** Step 1 — basics. */
 export const basicsSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -101,11 +93,16 @@ const STAGE_TYPES: [StageType, ...StageType[]] = [
   'knockout',
 ]
 
+/** Knockout bracket sizes accepted by the backend (as select strings). */
+export const BRACKET_SIZES = ['4', '8', '16', '32', '64', '128'] as const
+
 export const stageSchema = z.object({
   name: z.string().min(2, 'Nombre requerido'),
   type: z.enum(STAGE_TYPES),
   /** Stored as '1' | '2' from the select. */
   legs: z.enum(['1', '2']),
+  /** Only used when type === 'knockout'; stored as a select string. */
+  bracket_size: z.enum(BRACKET_SIZES).optional(),
 })
 
 export type StageFormValues = z.infer<typeof stageSchema>
@@ -117,12 +114,15 @@ export const groupSchema = z.object({
 
 export type GroupFormValues = z.infer<typeof groupSchema>
 
-/** Advancement rule form (step 5). */
+/**
+ * Advancement rule form (step 5). `group_id`/`target_stage_id` come from
+ * ReactSelect components, so they hold a numeric id or `null` (cleared).
+ */
 export const advancementRuleSchema = z.object({
-  group_id: optionalIntString,
+  group_id: z.number().int().positive().nullable(),
   qualifies_count: intString({ min: 0 }),
   eliminates_count: intString({ min: 0 }),
-  target_stage_id: optionalIntString,
+  target_stage_id: z.number().int().positive().nullable(),
 })
 
 export type AdvancementRuleFormValues = z.infer<typeof advancementRuleSchema>

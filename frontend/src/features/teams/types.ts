@@ -183,20 +183,3 @@ export interface PlayerHistory {
   history: PlayerHistoryEntry[]
   note: string | null
 }
-
-/* ------------------------------------------------------------------ */
-/* Group team assignment                                               */
-/* ------------------------------------------------------------------ */
-
-export interface GroupTeam {
-  id: number
-  group_id: number
-  tournament_team_id: number
-  seed: number | null
-  team_name: string
-}
-
-export interface AssignGroupTeamPayload {
-  tournament_team_id: number
-  seed?: number | null
-}

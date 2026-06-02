@@ -99,6 +99,8 @@ export interface Stage {
   /** JSON column — tiebreaker keys ordered by priority. */
   tiebreakers: string[] | null
   status: StageStatus
+  /** Knockout bracket size (4/8/16/32/64/128); null for league/groups. */
+  bracket_size: number | null
 }
 
 /** Group entity. */
@@ -107,6 +109,20 @@ export interface Group {
   stage_id: number
   name: string
   position: number
+}
+
+/**
+ * Group-team assignment entity — GET /groups/{id}/teams.
+ * `team_name` is embedded by the backend for display (may be null).
+ */
+export interface GroupTeam {
+  id: number
+  group_id: number
+  tournament_team_id: number
+  seed: number | null
+  team_name: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 /** Advancement rule entity. */
@@ -170,6 +186,8 @@ export interface CreateStagePayload {
   type: StageType
   legs: StageLegs
   tiebreakers?: string[] | null
+  /** Only meaningful for knockout stages; backend validates the value set. */
+  bracket_size?: number | null
 }
 
 export type UpdateStagePayload = Partial<CreateStagePayload>
@@ -179,6 +197,25 @@ export interface CreateGroupPayload {
 }
 
 export type UpdateGroupPayload = Partial<CreateGroupPayload>
+
+/** Assign a team to a group — POST /groups/{id}/teams. */
+export interface AssignGroupTeamPayload {
+  tournament_team_id: number
+  seed?: number | null
+}
+
+/** Auto-distribute payload — POST /stages/{id}/groups/distribute. */
+export interface DistributeGroupsPayload {
+  count: number
+  random?: boolean
+}
+
+/** Response of POST /stages/{id}/groups/distribute. */
+export interface DistributeGroupsResult {
+  stage_id: number
+  groups_created: number
+  teams_distributed: number
+}
 
 export interface CreateAdvancementRulePayload {
   group_id?: number | null

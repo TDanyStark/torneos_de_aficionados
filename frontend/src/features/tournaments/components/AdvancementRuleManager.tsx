@@ -13,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { ReactSelect, type SelectOption } from '@/components/shared/ReactSelect'
 import { EmptyState } from '@/components/shared/StateMessage'
 import { applyApiError } from '@/lib/formErrors'
 import {
@@ -24,39 +25,61 @@ import {
   useCreateAdvancementRule,
   useDeleteAdvancementRule,
 } from '../api/useAdvancementRules'
+import { useGroups } from '../api/useGroups'
+import { useStages } from '../api/useStages'
 
-export function AdvancementRuleManager({ stageId }: { stageId: number }) {
+interface AdvancementRuleManagerProps {
+  stageId: number
+  tournamentId: number
+}
+
+export function AdvancementRuleManager({
+  stageId,
+  tournamentId,
+}: AdvancementRuleManagerProps) {
   const { data: rules, isLoading } = useAdvancementRules(stageId)
+  const { data: groups } = useGroups(stageId)
+  const { data: stages } = useStages(tournamentId)
   const createRule = useCreateAdvancementRule(stageId)
   const deleteRule = useDeleteAdvancementRule(stageId)
 
   const form = useForm<AdvancementRuleFormValues>({
     resolver: zodResolver(advancementRuleSchema),
     defaultValues: {
-      group_id: '',
+      group_id: null,
       qualifies_count: '1',
       eliminates_count: '0',
-      target_stage_id: '',
+      target_stage_id: null,
     },
   })
 
-  const toNullableNumber = (v: string | undefined): number | null =>
-    v && v.trim() !== '' ? Number(v) : null
+  const groupOptions: SelectOption<number>[] = (groups ?? []).map((g) => ({
+    value: g.id,
+    label: g.name,
+  }))
+  const stageOptions: SelectOption<number>[] = (stages ?? [])
+    .filter((s) => s.id !== stageId)
+    .map((s) => ({ value: s.id, label: s.name }))
+
+  const groupName = (id: number | null): string | null =>
+    id == null ? null : (groupOptions.find((o) => o.value === id)?.label ?? null)
+  const stageName = (id: number | null): string | null =>
+    id == null ? null : (stageOptions.find((o) => o.value === id)?.label ?? null)
 
   const onSubmit = async (values: AdvancementRuleFormValues) => {
     try {
       await createRule.mutateAsync({
-        group_id: toNullableNumber(values.group_id),
+        group_id: values.group_id,
         qualifies_count: Number(values.qualifies_count),
         eliminates_count: Number(values.eliminates_count),
-        target_stage_id: toNullableNumber(values.target_stage_id),
+        target_stage_id: values.target_stage_id,
       })
       toast.success('Regla creada')
       form.reset({
-        group_id: '',
+        group_id: null,
         qualifies_count: '1',
         eliminates_count: '0',
-        target_stage_id: '',
+        target_stage_id: null,
       })
     } catch (error) {
       applyApiError(error, form.setError, [
@@ -117,16 +140,19 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
             name="group_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ID de grupo (opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="Toda la fase"
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                </FormControl>
+                <FormLabel>Grupo</FormLabel>
+                <ReactSelect<SelectOption<number>>
+                  isClearable
+                  placeholder="Toda la fase"
+                  options={groupOptions}
+                  value={
+                    groupOptions.find((o) => o.value === field.value) ?? null
+                  }
+                  onChange={(opt) => field.onChange(opt?.value ?? null)}
+                />
+                <FormDescription>
+                  Déjalo en «Toda la fase» para aplicar a todos los grupos.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -136,16 +162,19 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
             name="target_stage_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fase destino (opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="ID de fase destino"
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                </FormControl>
+                <FormLabel>Fase destino</FormLabel>
+                <ReactSelect<SelectOption<number>>
+                  isClearable
+                  placeholder="Sin destino"
+                  options={stageOptions}
+                  value={
+                    stageOptions.find((o) => o.value === field.value) ?? null
+                  }
+                  onChange={(opt) => field.onChange(opt?.value ?? null)}
+                />
+                <FormDescription>
+                  Fase a la que avanzan los equipos clasificados.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -167,29 +196,31 @@ export function AdvancementRuleManager({ stageId }: { stageId: number }) {
         />
       ) : (
         <ul className="divide-y rounded-md border">
-          {rules.map((rule) => (
-            <li
-              key={rule.id}
-              className="flex items-center justify-between gap-2 p-3 text-sm"
-            >
-              <span>
-                Clasifican <strong>{rule.qualifies_count}</strong>, eliminan{' '}
-                <strong>{rule.eliminates_count}</strong>
-                {rule.group_id ? ` · grupo #${rule.group_id}` : ' · toda la fase'}
-                {rule.target_stage_id
-                  ? ` → fase #${rule.target_stage_id}`
-                  : ''}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(rule.id)}
-                aria-label="Eliminar regla"
+          {rules.map((rule) => {
+            const group = groupName(rule.group_id)
+            const target = stageName(rule.target_stage_id)
+            return (
+              <li
+                key={rule.id}
+                className="flex items-center justify-between gap-2 p-3 text-sm"
               >
-                <Trash2 className="text-destructive size-4" />
-              </Button>
-            </li>
-          ))}
+                <span>
+                  Clasifican <strong>{rule.qualifies_count}</strong>, eliminan{' '}
+                  <strong>{rule.eliminates_count}</strong>
+                  {group ? ` · ${group}` : ' · toda la fase'}
+                  {target ? ` → ${target}` : ''}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(rule.id)}
+                  aria-label="Eliminar regla"
+                >
+                  <Trash2 className="text-destructive size-4" />
+                </Button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

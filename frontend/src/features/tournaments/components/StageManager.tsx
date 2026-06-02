@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -23,7 +23,7 @@ import {
 import { EmptyState } from '@/components/shared/StateMessage'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { applyApiError } from '@/lib/formErrors'
-import { stageSchema, type StageFormValues } from '../schemas'
+import { BRACKET_SIZES, stageSchema, type StageFormValues } from '../schemas'
 import type { Stage, StageType } from '../types'
 import {
   useCreateStage,
@@ -50,8 +50,11 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
       name: '',
       type: 'league',
       legs: '1',
+      bracket_size: '8',
     },
   })
+
+  const watchType = useWatch({ control: form.control, name: 'type' })
 
   const onSubmit = async (values: StageFormValues) => {
     try {
@@ -59,15 +62,25 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
         name: values.name,
         type: values.type,
         legs: Number(values.legs) === 2 ? 2 : 1,
+        bracket_size:
+          values.type === 'knockout' && values.bracket_size
+            ? Number(values.bracket_size)
+            : null,
       })
       toast.success('Fase creada')
       form.reset({
         name: '',
         type: 'league',
         legs: '1',
+        bracket_size: '8',
       })
     } catch (error) {
-      applyApiError(error, form.setError, ['name', 'type', 'legs'])
+      applyApiError(error, form.setError, [
+        'name',
+        'type',
+        'legs',
+        'bracket_size',
+      ])
     }
   }
 
@@ -147,6 +160,35 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
               </FormItem>
             )}
           />
+          {watchType === 'knockout' ? (
+            <FormField
+              control={form.control}
+              name="bracket_size"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tamaño del cuadro</FormLabel>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {BRACKET_SIZES.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size} equipos
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
           <div className="sm:col-span-2">
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Agregar fase

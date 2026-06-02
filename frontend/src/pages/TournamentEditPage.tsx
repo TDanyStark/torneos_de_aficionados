@@ -43,6 +43,7 @@ import {
 import { DateField } from '@/features/tournaments/components/DateField'
 import { LogoUploader } from '@/features/tournaments/components/LogoUploader'
 import { StageManager } from '@/features/tournaments/components/StageManager'
+import { StagePanelManager } from '@/features/tournaments/components/StagePanelManager'
 import { TournamentAdsPanel } from '@/features/ads/components/TournamentAdsPanel'
 import { useAuthStore, useIsAdmin } from '@/stores/authStore'
 import type { Tournament } from '@/features/tournaments/types'
@@ -445,8 +446,11 @@ export function TournamentEditPage() {
           <CardHeader>
             <CardTitle>Fases</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <StageManager tournamentId={tournament.id} />
+            <div className="border-t pt-6">
+              <StagePanelManager tournamentId={tournament.id} />
+            </div>
           </CardContent>
         </Card>
       ) : null}
