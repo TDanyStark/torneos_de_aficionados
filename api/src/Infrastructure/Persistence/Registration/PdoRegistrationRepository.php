@@ -67,6 +67,28 @@ final class PdoRegistrationRepository implements RegistrationRepository
     }
 
     /**
+     * @return array<int,Registration>
+     */
+    public function findLateApprovedByTournament(int $tournamentId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT r.*, tt.name AS team_name, tt.status AS team_status
+             FROM registrations r
+             INNER JOIN tournament_teams tt ON tt.id = r.tournament_team_id
+             WHERE r.tournament_id = :tournament_id
+               AND r.is_late = 1
+               AND tt.status = 'approved'
+             ORDER BY (r.joined_at_round IS NULL), r.joined_at_round ASC, r.id ASC"
+        );
+        $stmt->execute(['tournament_id' => $tournamentId]);
+
+        return array_map(
+            static fn (array $row): Registration => Registration::fromRow($row),
+            $stmt->fetchAll()
+        );
+    }
+
+    /**
      * @param array<string,mixed> $data
      */
     public function create(array $data): Registration

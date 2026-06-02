@@ -9,6 +9,12 @@ use App\Application\Actions\AdvancementRule\UpdateAdvancementRuleAction;
 use App\Application\Actions\Auth\LoginAction;
 use App\Application\Actions\Auth\MeAction;
 use App\Application\Actions\Auth\RegisterAction;
+use App\Application\Actions\Fixture\GenerateFixturesAction;
+use App\Application\Actions\Fixture\GroupStandingsAction;
+use App\Application\Actions\Fixture\ListMatchesAction;
+use App\Application\Actions\Fixture\ListRoundsAction;
+use App\Application\Actions\Fixture\RegenerateFixturesAction;
+use App\Application\Actions\Fixture\UpdateMatchAction;
 use App\Application\Actions\Group\CreateGroupAction;
 use App\Application\Actions\Group\DeleteGroupAction;
 use App\Application\Actions\Group\ListGroupsAction;
@@ -108,6 +114,10 @@ return function (App $app) {
                 ->add($roleGuard->require('organizer'))
                 ->add(JwtAuthMiddleware::class);
 
+            // Fixtures read models (public). Calendar order = round number ASC.
+            $tournaments->get('/{id}/rounds', ListRoundsAction::class);
+            $tournaments->get('/{id}/matches', ListMatchesAction::class);
+
             // Stages (nested). List public; create organizer-only.
             $tournaments->get('/{id}/stages', ListStagesAction::class);
             $tournaments->post('/{id}/stages', CreateStageAction::class)
@@ -154,6 +164,13 @@ return function (App $app) {
             $stages->get('/{id}/advancement-rules', ListAdvancementRulesAction::class);
             $stages->post('/{id}/advancement-rules', CreateAdvancementRuleAction::class)
                 ->add(JwtAuthMiddleware::class);
+
+            // Fixture engine (organizer). {id} is the stage id -> tournament
+            // resolved + authorized inside the action.
+            $stages->post('/{id}/generate-fixtures', GenerateFixturesAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $stages->post('/{id}/regenerate-fixtures', RegenerateFixturesAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Groups module ({id} is the group id -> authorized inside action).
@@ -168,6 +185,9 @@ return function (App $app) {
             $groups->get('/{id}/teams', ListGroupTeamsAction::class);
             $groups->post('/{id}/teams', AssignTeamToGroupAction::class)
                 ->add(JwtAuthMiddleware::class);
+
+            // Standings (public). Resolves the sport module's strategy.
+            $groups->get('/{id}/standings', GroupStandingsAction::class);
         });
 
         // Advancement rules module ({id} is the rule id -> authorized inside action).
@@ -214,6 +234,13 @@ return function (App $app) {
         // Group team removal ({id} is the group_teams id -> authorized inside).
         $group->group('/group-teams', function (Group $groupTeams) {
             $groupTeams->delete('/{id}', RemoveTeamFromGroupAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Matches module ({id} is the match id -> tournament resolved +
+        // authorized inside the action). Metadata-only edits (Fase 4).
+        $group->group('/matches', function (Group $matches) {
+            $matches->put('/{id}', UpdateMatchAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
     });

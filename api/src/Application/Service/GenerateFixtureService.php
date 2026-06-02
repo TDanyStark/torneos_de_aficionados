@@ -16,6 +16,7 @@ use App\Domain\Fixture\RoundRepository;
 use App\Domain\Group\GroupRepository;
 use App\Domain\GroupTeam\GroupTeamRepository;
 use App\Domain\Shared\Exception\ValidationException;
+use App\Domain\Shared\Pagination;
 use App\Domain\Stage\Stage;
 use App\Domain\Team\TeamRepository;
 use App\Domain\Tournament\Tournament;
@@ -147,14 +148,14 @@ final class GenerateFixtureService
      */
     private function approvedTeamIds(int $tournamentId): array
     {
-        $ids = [];
-        foreach ($this->teams->findByTournament($tournamentId) as $team) {
-            if ($team->status === 'approved') {
-                $ids[] = $team->id;
-            }
-        }
+        $pagination = new Pagination(1, 100);
+        $teams = $this->teams->paginateByTournament(
+            $tournamentId,
+            $pagination,
+            ['status' => 'approved']
+        );
 
-        return $ids;
+        return array_map(static fn ($t): int => $t->id, $teams);
     }
 
     private function buildKnockoutPlan(Stage $stage): FixturePlan

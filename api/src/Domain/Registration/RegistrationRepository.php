@@ -24,6 +24,15 @@ interface RegistrationRepository
     public function countByTournament(int $tournamentId): int;
 
     /**
+     * Late, APPROVED registrations of a tournament (is_late = 1 AND the team is
+     * approved), ordered by joined_at_round ASC then id ASC. Used by the fixture
+     * regenerator to find the late team that joined at round K.
+     *
+     * @return array<int,Registration>
+     */
+    public function findLateApprovedByTournament(int $tournamentId): array;
+
+    /**
      * @param array<string,mixed> $data
      */
     public function create(array $data): Registration;
