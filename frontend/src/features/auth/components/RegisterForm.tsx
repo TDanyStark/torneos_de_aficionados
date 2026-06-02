@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,8 +35,12 @@ export function RegisterForm({
   redirectTo = '/tournaments/new',
 }: RegisterFormProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const register = useRegister()
+
+  // A `from` target (e.g. a self-registration link) takes precedence.
+  const from = (location.state as { from?: string } | null)?.from
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -47,7 +51,7 @@ export function RegisterForm({
     try {
       await register.mutateAsync(values)
       await queryClient.invalidateQueries({ queryKey: authKeys.me })
-      navigate(redirectTo, { replace: true })
+      navigate(from ?? redirectTo, { replace: true })
     } catch (error) {
       applyApiError(error, form.setError, KNOWN_FIELDS)
     }

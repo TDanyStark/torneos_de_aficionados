@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -60,7 +60,7 @@ export function SelfRegistrationForm({
     defaultValues: DEFAULT_SELF_REGISTRATION_FORM,
   })
 
-  const isPlayer = form.watch('is_player')
+  const isPlayer = useWatch({ control: form.control, name: 'is_player' })
 
   const onSubmit = async (values: SelfRegistrationFormValues) => {
     if (isPlayer) {

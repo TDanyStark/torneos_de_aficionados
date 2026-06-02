@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { ArrowLeft, Calendar, Users } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -75,6 +75,13 @@ export function TournamentDetailPage() {
               <dd className="font-medium">{data.points_loss} pts</dd>
             </div>
           </dl>
+
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/tournaments/${data.slug}/teams`}>
+              <Users className="size-4" />
+              Ver equipos
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

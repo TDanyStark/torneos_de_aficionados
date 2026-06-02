@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckCircle2, Loader2, Search, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -53,7 +53,7 @@ export function AddPlayerForm({ tournamentId, teamId }: AddPlayerFormProps) {
     defaultValues: DEFAULT_ADD_PLAYER_FORM,
   })
 
-  const documentId = form.watch('document_id')
+  const documentId = useWatch({ control: form.control, name: 'document_id' })
   const debouncedDoc = useDebouncedValue(documentId, 450)
   const lookup = usePlayerLookup(tournamentId, debouncedDoc)
 

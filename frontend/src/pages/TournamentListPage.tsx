@@ -6,6 +6,7 @@ import { useTournamentFilters } from '@/features/tournaments/hooks/useTournament
 import { TournamentCard } from '@/features/tournaments/components/TournamentCard'
 import { TournamentCardSkeleton } from '@/features/tournaments/components/TournamentCardSkeleton'
 import { TournamentFilterBar } from '@/features/tournaments/components/TournamentFilterBar'
+import { OrganizerCta } from '@/features/tournaments/components/OrganizerCta'
 
 export function TournamentListPage() {
   const { filters, setFilters } = useTournamentFilters()
@@ -13,6 +14,8 @@ export function TournamentListPage() {
 
   return (
     <div className="space-y-5">
+      <OrganizerCta />
+
       <div className="flex items-center gap-2">
         <Trophy className="text-brand size-6" />
         <h1 className="text-xl font-semibold">Torneos</h1>

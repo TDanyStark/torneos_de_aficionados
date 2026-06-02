@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ErrorState } from '@/components/shared/StateMessage'
-import { useTeam, useDeleteTeam } from '../api/useTeams'
+import { useTeam } from '../api/useTeams'
 import {
   useRoster,
   useDeleteTeamPlayer,
@@ -81,5 +81,3 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
     </div>
   )
 }
-
-export { useDeleteTeam }

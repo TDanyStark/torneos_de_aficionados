@@ -58,7 +58,7 @@ export function useCreateRegistration(tournamentId: number) {
 }
 
 /** Organizer approve/reject decision. */
-export function useDecideRegistration(tournamentId: number) {
+export function useDecideRegistration() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({

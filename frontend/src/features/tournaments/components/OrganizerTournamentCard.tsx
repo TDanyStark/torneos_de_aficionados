@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Pencil, Users } from 'lucide-react'
+import { Copy, Inbox, Pencil, Users } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   Card,
   CardContent,
@@ -16,6 +17,22 @@ export function OrganizerTournamentCard({
 }: {
   tournament: Tournament
 }) {
+  const copyRegistrationLink = async () => {
+    if (!tournament.registration_code) {
+      toast.error(
+        'Abre las inscripciones del torneo para generar el enlace de inscripción.',
+      )
+      return
+    }
+    const link = `${window.location.origin}/inscripcion/${tournament.id}/${tournament.registration_code}`
+    try {
+      await navigator.clipboard.writeText(link)
+      toast.success('Enlace de inscripción copiado')
+    } catch {
+      toast.error('No se pudo copiar el enlace')
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -29,7 +46,7 @@ export function OrganizerTournamentCard({
           {tournament.description ?? 'Sin descripción'}
         </p>
       </CardContent>
-      <CardFooter className="gap-2">
+      <CardFooter className="flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
           <Link to={`/tournaments/${tournament.id}/edit`}>
             <Pencil className="size-4" />
@@ -41,6 +58,16 @@ export function OrganizerTournamentCard({
             <Users className="size-4" />
             Roles
           </Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/tournaments/${tournament.id}/registrations`}>
+            <Inbox className="size-4" />
+            Inscripciones
+          </Link>
+        </Button>
+        <Button variant="outline" size="sm" onClick={copyRegistrationLink}>
+          <Copy className="size-4" />
+          Copiar enlace
         </Button>
       </CardFooter>
     </Card>

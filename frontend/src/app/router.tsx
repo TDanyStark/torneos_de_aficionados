@@ -4,19 +4,45 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { TournamentListPage } from '@/pages/TournamentListPage'
 import { TournamentDetailPage } from '@/pages/TournamentDetailPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { TournamentWizardPage } from '@/pages/TournamentWizardPage'
 import { TournamentEditPage } from '@/pages/TournamentEditPage'
 import { TournamentRolesPage } from '@/pages/TournamentRolesPage'
+import { TeamListPage } from '@/pages/TeamListPage'
+import { TeamDetailPage } from '@/pages/TeamDetailPage'
+import { TeamManagePage } from '@/pages/TeamManagePage'
+import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
+import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
+import { SelfRegistrationPage } from '@/pages/SelfRegistrationPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
+  // Public self-registration — TOP-LEVEL, outside AppLayout and any auth guard.
+  // The link carries both the tournament id and the registration code.
+  {
+    path: '/inscripcion/:tournamentId/:registrationCode',
+    element: <SelfRegistrationPage />,
+  },
+  {
+    path: '/inscripcion/:registrationCode',
+    element: <SelfRegistrationPage />,
+  },
   {
     element: <AppLayout />,
     children: [
       { path: '/', element: <TournamentListPage /> },
       { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
       { path: '/tournaments/:slug', element: <TournamentDetailPage /> },
+
+      // Public team browsing (per tournament, by slug).
+      { path: '/tournaments/:slug/teams', element: <TeamListPage /> },
+      {
+        path: '/tournaments/:slug/teams/:teamId',
+        element: <TeamDetailPage />,
+      },
+
       {
         element: <ProtectedRoute />,
         children: [
@@ -24,6 +50,17 @@ export const router = createBrowserRouter([
           { path: '/tournaments/new', element: <TournamentWizardPage /> },
           { path: '/tournaments/:id/edit', element: <TournamentEditPage /> },
           { path: '/tournaments/:id/roles', element: <TournamentRolesPage /> },
+
+          // Organizer/delegate team & registration management (by tournament id).
+          {
+            path: '/tournaments/:id/teams/:teamId/manage',
+            element: <TeamManagePage />,
+          },
+          {
+            path: '/tournaments/:id/registrations',
+            element: <RegistrationsInboxPage />,
+          },
+          { path: '/players/:id/history', element: <PlayerHistoryPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
