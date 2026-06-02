@@ -66,8 +66,9 @@ export interface Tournament {
   points_win: number
   points_draw: number
   points_loss: number
-  allow_late_registration: BackendBool
-  registration_open: BackendBool
+  /** Backend emits these as JSON true/false (not tinyint). */
+  allow_late_registration: boolean
+  registration_open: boolean
   registration_code: string | null
   starts_at: string | null
   /** Fase 9 — datetime string (YYYY-MM-DD or with time) or null. */
