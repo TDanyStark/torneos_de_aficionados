@@ -15,6 +15,8 @@ interface TournamentRepository
 
     public function findBySlug(string $slug): ?Tournament;
 
+    public function findByRegistrationCode(string $code): ?Tournament;
+
     public function slugExists(string $slug): bool;
 
     public function registrationCodeExists(string $code): bool;

@@ -37,6 +37,17 @@ final class PdoTournamentRepository implements TournamentRepository
         return $row ? Tournament::fromRow($row) : null;
     }
 
+    public function findByRegistrationCode(string $code): ?Tournament
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM tournaments WHERE registration_code = :code AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute(['code' => $code]);
+        $row = $stmt->fetch();
+
+        return $row ? Tournament::fromRow($row) : null;
+    }
+
     public function slugExists(string $slug): bool
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM tournaments WHERE slug = :slug LIMIT 1');
