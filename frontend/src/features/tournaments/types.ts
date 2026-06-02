@@ -11,6 +11,9 @@ export type TournamentStatus =
 
 export type StageType = 'league' | 'groups' | 'knockout'
 
+/** Stage lifecycle status (backend enum, default `pending`). */
+export type StageStatus = 'pending' | 'in_progress' | 'finished'
+
 /** 1 = single leg, 2 = home & away (ida/vuelta). */
 export type StageLegs = 1 | 2
 
@@ -95,7 +98,7 @@ export interface Stage {
   legs: StageLegs
   /** JSON column — tiebreaker keys ordered by priority. */
   tiebreakers: string[] | null
-  status: string
+  status: StageStatus
 }
 
 /** Group entity. */

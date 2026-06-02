@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import type { StandingRow } from '../types'
 
 interface Column {
@@ -46,10 +47,32 @@ const COLUMNS: Column[] = [
 
 interface StandingsTableProps {
   rows: StandingRow[]
+  /**
+   * Number of top positions that qualify (advance). Rows with
+   * `position <= qualifiesCount` are tinted green. 0 / undefined = none.
+   */
+  qualifiesCount?: number
+  /**
+   * Number of bottom positions that are eliminated/relegated. Rows in the
+   * last `eliminatesCount` positions are tinted red. 0 / undefined = none.
+   */
+  eliminatesCount?: number
 }
 
-/** Standings table for a single group, with tiebreaker tooltips on headers. */
-export function StandingsTable({ rows }: StandingsTableProps) {
+/**
+ * Standings table for a single group, with tiebreaker tooltips on headers and
+ * optional advancement coloring (green = qualifies, red = eliminated). The
+ * component stays presentational — qualify/eliminate counts are computed by the
+ * caller from the stage's advancement rule and passed as props.
+ */
+export function StandingsTable({
+  rows,
+  qualifiesCount = 0,
+  eliminatesCount = 0,
+}: StandingsTableProps) {
+  const total = rows.length
+  const showLegend = qualifiesCount > 0 || eliminatesCount > 0
+
   return (
     <TooltipProvider>
       <Table>
@@ -79,8 +102,21 @@ export function StandingsTable({ rows }: StandingsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.team_id}>
+          {rows.map((row) => {
+            const qualifies =
+              qualifiesCount > 0 && row.position <= qualifiesCount
+            const eliminated =
+              eliminatesCount > 0 && row.position > total - eliminatesCount
+            return (
+            <TableRow
+              key={row.team_id}
+              className={cn(
+                qualifies &&
+                  'bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/60',
+                eliminated &&
+                  'bg-red-50 hover:bg-red-100/70 dark:bg-red-950/40 dark:hover:bg-red-950/60',
+              )}
+            >
               <TableCell className="text-center font-medium">
                 {row.position}
               </TableCell>
@@ -112,9 +148,26 @@ export function StandingsTable({ rows }: StandingsTableProps) {
                 {row.points}
               </TableCell>
             </TableRow>
-          ))}
+            )
+          })}
         </TableBody>
       </Table>
+      {showLegend ? (
+        <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          {qualifiesCount > 0 ? (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block size-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-800" />
+              Clasifica
+            </span>
+          ) : null}
+          {eliminatesCount > 0 ? (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block size-2.5 rounded-sm bg-red-200 dark:bg-red-800" />
+              Eliminado
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </TooltipProvider>
   )
 }

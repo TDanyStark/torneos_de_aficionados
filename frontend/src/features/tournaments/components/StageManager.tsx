@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash2 } from 'lucide-react'
@@ -20,9 +21,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/shared/StateMessage'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { applyApiError } from '@/lib/formErrors'
 import { stageSchema, type StageFormValues } from '../schemas'
-import type { StageType } from '../types'
+import type { Stage, StageType } from '../types'
 import {
   useCreateStage,
   useDeleteStage,
@@ -39,6 +41,8 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
   const { data: stages, isLoading } = useStages(tournamentId)
   const createStage = useCreateStage(tournamentId)
   const deleteStage = useDeleteStage(tournamentId)
+
+  const [toDelete, setToDelete] = useState<Stage | null>(null)
 
   const form = useForm<StageFormValues>({
     resolver: zodResolver(stageSchema),
@@ -67,10 +71,12 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
     }
   }
 
-  const onDelete = async (id: number) => {
+  const onDelete = async () => {
+    if (!toDelete) return
     try {
-      await deleteStage.mutateAsync(id)
+      await deleteStage.mutateAsync(toDelete.id)
       toast.success('Fase eliminada')
+      setToDelete(null)
     } catch {
       toast.error('No se pudo eliminar la fase')
     }
@@ -173,7 +179,7 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDelete(stage.id)}
+                onClick={() => setToDelete(stage)}
                 aria-label="Eliminar fase"
               >
                 <Trash2 className="text-destructive size-4" />
@@ -182,6 +188,21 @@ export function StageManager({ tournamentId }: { tournamentId: number }) {
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={toDelete != null}
+        onOpenChange={(open) => !open && setToDelete(null)}
+        title="Eliminar fase"
+        description={
+          toDelete
+            ? `Se eliminará TODO lo asociado a la fase «${toDelete.name}»: resultados, partidos, goleadores, grupos y reglas. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        loading={deleteStage.isPending}
+        onConfirm={onDelete}
+      />
     </div>
   )
 }

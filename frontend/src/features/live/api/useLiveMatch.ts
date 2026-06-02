@@ -6,8 +6,14 @@ import type { LiveMatch } from '../types'
 export const liveKeys = {
   all: ['live'] as const,
   match: (matchId: number) => ['live', 'match', matchId] as const,
-  topScorers: (tournamentId: number, page: number) =>
-    ['live', 'top-scorers', tournamentId, page] as const,
+  topScorers: (tournamentId: number, page: number, stageIds: number[] = []) =>
+    [
+      'live',
+      'top-scorers',
+      tournamentId,
+      page,
+      [...stageIds].sort((a, b) => a - b),
+    ] as const,
   cards: (tournamentId: number, page: number) =>
     ['live', 'cards', tournamentId, page] as const,
 }

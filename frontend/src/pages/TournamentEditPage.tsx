@@ -42,8 +42,9 @@ import {
 } from '@/features/tournaments/api/useTournaments'
 import { DateField } from '@/features/tournaments/components/DateField'
 import { LogoUploader } from '@/features/tournaments/components/LogoUploader'
+import { StageManager } from '@/features/tournaments/components/StageManager'
 import { TournamentAdsPanel } from '@/features/ads/components/TournamentAdsPanel'
-import { useIsAdmin } from '@/stores/authStore'
+import { useAuthStore, useIsAdmin } from '@/stores/authStore'
 import type { Tournament } from '@/features/tournaments/types'
 
 export function TournamentEditPage() {
@@ -51,6 +52,7 @@ export function TournamentEditPage() {
   const tournamentId = Number(id)
   const navigate = useNavigate()
   const isAdmin = useIsAdmin()
+  const roles = useAuthStore((s) => s.roles)
 
   const {
     data: tournament,
@@ -96,6 +98,11 @@ export function TournamentEditPage() {
   if (isError || !tournament) {
     return <ErrorState message="No se pudo cargar el torneo." />
   }
+
+  // Only the tournament organizer (owner) manages stages.
+  const isOrganizer = roles.some(
+    (r) => r.tournament_id === tournament.id && r.role === 'organizer',
+  )
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
