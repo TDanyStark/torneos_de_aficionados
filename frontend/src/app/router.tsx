@@ -55,37 +55,11 @@ export const router = createBrowserRouter([
       // hub tab); the hub's Fixtures/Tabla cover league play.
       { path: '/tournaments/:slug/bracket', element: <BracketPage /> },
 
-      // Legacy public slug routes → redirect to the canonical hub, preserving
-      // slug/teamId and mapping to the right tab.
-      {
-        path: '/tournaments/:slug',
-        element: <LegacyTournamentRedirect />,
-      },
-      {
-        path: '/tournaments/:slug/fixtures',
-        element: <LegacyTournamentRedirect tab="fixtures" />,
-      },
-      {
-        path: '/tournaments/:slug/standings',
-        element: <LegacyTournamentRedirect tab="tabla" />,
-      },
-      {
-        path: '/tournaments/:slug/teams',
-        element: <LegacyTournamentRedirect tab="equipos" />,
-      },
-      {
-        path: '/tournaments/:slug/teams/:teamId',
-        element: <LegacyTeamRedirect />,
-      },
-      {
-        path: '/tournaments/:slug/top-scorers',
-        element: <LegacyTournamentRedirect tab="goleadores" />,
-      },
-      {
-        path: '/tournaments/:slug/cards',
-        element: <LegacyTournamentRedirect tab="disciplina" />,
-      },
-
+      // Authed organizer/delegate routes (by tournament id). Declared BEFORE the
+      // legacy public `/tournaments/:slug/*` redirects so a numeric path like
+      // `/tournaments/32/fixtures` resolves to the management page instead of
+      // being shadowed by the same-shape legacy slug redirect (which would
+      // forward to the slug-only public hub and 404).
       {
         element: <ProtectedRoute />,
         children: [
@@ -116,6 +90,37 @@ export const router = createBrowserRouter([
             element: <RefereeMatchPage />,
           },
         ],
+      },
+
+      // Legacy public slug routes → redirect to the canonical hub, preserving
+      // slug/teamId and mapping to the right tab.
+      {
+        path: '/tournaments/:slug',
+        element: <LegacyTournamentRedirect />,
+      },
+      {
+        path: '/tournaments/:slug/fixtures',
+        element: <LegacyTournamentRedirect tab="fixtures" />,
+      },
+      {
+        path: '/tournaments/:slug/standings',
+        element: <LegacyTournamentRedirect tab="tabla" />,
+      },
+      {
+        path: '/tournaments/:slug/teams',
+        element: <LegacyTournamentRedirect tab="equipos" />,
+      },
+      {
+        path: '/tournaments/:slug/teams/:teamId',
+        element: <LegacyTeamRedirect />,
+      },
+      {
+        path: '/tournaments/:slug/top-scorers',
+        element: <LegacyTournamentRedirect tab="goleadores" />,
+      },
+      {
+        path: '/tournaments/:slug/cards',
+        element: <LegacyTournamentRedirect tab="disciplina" />,
       },
 
       { path: '*', element: <NotFoundPage /> },
