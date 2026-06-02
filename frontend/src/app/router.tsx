@@ -17,6 +17,7 @@ import { TournamentRolesPage } from '@/pages/TournamentRolesPage'
 import { TeamDetailPage } from '@/pages/TeamDetailPage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
 import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
+import { TournamentTeamsPage } from '@/pages/TournamentTeamsPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
 import { SelfRegistrationPage } from '@/pages/SelfRegistrationPage'
 import { BracketPage } from '@/pages/BracketPage'
@@ -69,6 +70,12 @@ export const router = createBrowserRouter([
           { path: '/tournaments/:id/roles', element: <TournamentRolesPage /> },
 
           // Organizer/delegate team & registration management (by tournament id).
+          // The teams list must precede the legacy `/tournaments/:slug/teams`
+          // redirect so a numeric id resolves to this management page.
+          {
+            path: '/tournaments/:id/teams',
+            element: <TournamentTeamsPage />,
+          },
           {
             path: '/tournaments/:id/teams/:teamId/manage',
             element: <TeamManagePage />,

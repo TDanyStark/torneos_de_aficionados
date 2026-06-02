@@ -164,6 +164,7 @@ export interface RegistrationDecisionResult {
 export interface RegistrationFilters {
   page: number
   status?: RegistrationStatus
+  channel?: RegistrationChannel
 }
 
 /* ------------------------------------------------------------------ */

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Tournament } from '../types'
 import { TournamentStatusBadge } from './TournamentStatusBadge'
+import { TournamentLogo } from './TournamentLogo'
 
 export function OrganizerTournamentCard({
   tournament,
@@ -37,7 +38,14 @@ export function OrganizerTournamentCard({
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base">{tournament.name}</CardTitle>
+          <div className="flex items-center gap-3">
+            <TournamentLogo
+              name={tournament.name}
+              logoUrl={tournament.logo_url}
+              seed={tournament.id}
+            />
+            <CardTitle className="text-base">{tournament.name}</CardTitle>
+          </div>
           <TournamentStatusBadge status={tournament.status} />
         </div>
       </CardHeader>
@@ -54,9 +62,9 @@ export function OrganizerTournamentCard({
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/tournaments/${tournament.id}/roles`}>
+          <Link to={`/tournaments/${tournament.id}/teams`}>
             <Users className="size-4" />
-            Roles
+            Equipos
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
