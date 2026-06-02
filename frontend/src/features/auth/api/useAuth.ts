@@ -2,7 +2,13 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import type { ApiSuccess } from '@/lib/apiTypes'
 import { useAuthStore } from '@/stores/authStore'
-import type { LoginPayload, LoginResponse, MeResponse } from '../types'
+import type {
+  LoginPayload,
+  LoginResponse,
+  MeResponse,
+  RegisterPayload,
+  RegisterResponse,
+} from '../types'
 
 export const authKeys = {
   me: ['auth', 'me'] as const,
@@ -25,6 +31,32 @@ export function useLogin() {
         body: payload,
         anonymous: true,
       })
+      return res.data
+    },
+    onSuccess: (data) => {
+      setToken(data.token)
+    },
+  })
+}
+
+/**
+ * Register mutation. On success it stores the JWT issued by the backend so the
+ * user is logged in immediately (organizer onboarding funnel). The caller then
+ * refetches /me to populate roles.
+ */
+export function useRegister() {
+  const setToken = useAuthStore((s) => s.setToken)
+
+  return useMutation({
+    mutationFn: async (payload: RegisterPayload) => {
+      const res = await apiClient.request<ApiSuccess<RegisterResponse>>(
+        '/auth/register',
+        {
+          method: 'POST',
+          body: payload,
+          anonymous: true,
+        },
+      )
       return res.data
     },
     onSuccess: (data) => {

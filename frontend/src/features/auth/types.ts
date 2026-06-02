@@ -38,3 +38,22 @@ export interface LoginResponse {
   token: string
   user: AuthUser
 }
+
+/** Register request payload — POST /api/v1/auth/register. */
+export interface RegisterPayload {
+  name: string
+  email: string
+  password: string
+  phone?: string | null
+}
+
+/**
+ * Register response (data). The backend issues a JWT immediately on register
+ * alongside the created user (token + token_type + expires_in + user).
+ */
+export interface RegisterResponse {
+  token: string
+  token_type?: string
+  expires_in?: number
+  user: AuthUser
+}
