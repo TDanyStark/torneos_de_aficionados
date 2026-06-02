@@ -18,6 +18,7 @@ import { TeamDetailPage } from '@/pages/TeamDetailPage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
 import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
 import { TournamentTeamsPage } from '@/pages/TournamentTeamsPage'
+import { MyRegistrationsPage } from '@/pages/MyRegistrationsPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
 import { SelfRegistrationPage } from '@/pages/SelfRegistrationPage'
 import { BracketPage } from '@/pages/BracketPage'
@@ -65,6 +66,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/mis-inscripciones', element: <MyRegistrationsPage /> },
           { path: '/tournaments/new', element: <TournamentWizardPage /> },
           { path: '/tournaments/:id/edit', element: <TournamentEditPage /> },
           { path: '/tournaments/:id/roles', element: <TournamentRolesPage /> },

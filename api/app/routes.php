@@ -57,6 +57,7 @@ use App\Application\Actions\Referee\DeleteRefereeAction;
 use App\Application\Actions\Referee\ListRefereesAction;
 use App\Application\Actions\Referee\UpdateRefereeAction;
 use App\Application\Actions\Registration\CreateRegistrationAction;
+use App\Application\Actions\Registration\ListMyRegistrationsAction;
 use App\Application\Actions\Registration\ListRegistrationsAction;
 use App\Application\Actions\Registration\UpdateRegistrationAction;
 use App\Application\Actions\Registration\UploadRegistrationLogoAction;
@@ -120,6 +121,14 @@ return function (App $app) {
             $auth->post('/login', LoginAction::class);
             $auth->post('/register', RegisterAction::class);
             $auth->get('/me', MeAction::class)->add(JwtAuthMiddleware::class);
+        });
+
+        // Current-user read models. "Mis inscripciones": tournaments where the
+        // user is a team delegate, with status. Roles are per-tournament, so this
+        // is independent of organizer/referee/player roles elsewhere.
+        $group->group('/me', function (Group $me) {
+            $me->get('/registrations', ListMyRegistrationsAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Sports module (public catalog)

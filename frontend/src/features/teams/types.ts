@@ -181,6 +181,25 @@ export interface RegistrationFilters {
   channel?: RegistrationChannel
 }
 
+/**
+ * Read-model row for the "Mis inscripciones" view (GET /me/registrations):
+ * one row per team the current user enrolled as delegate.
+ */
+export interface MyRegistration {
+  registration_id: number
+  registration_status: RegistrationStatus
+  channel: RegistrationChannel
+  is_late: BackendBool
+  team_id: number
+  team_name: string
+  team_status: TeamStatus
+  tournament_id: number
+  tournament_name: string
+  tournament_slug: string
+  tournament_logo_url: string | null
+  tournament_state: string
+}
+
 /* ------------------------------------------------------------------ */
 /* Player history (derived, organizer-owner only)                      */
 /* ------------------------------------------------------------------ */

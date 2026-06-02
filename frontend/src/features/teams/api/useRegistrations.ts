@@ -8,6 +8,7 @@ import type { Paginated } from '@/lib/apiTypes'
 import { teamKeys } from './useTeams'
 import type {
   CreateRegistrationPayload,
+  MyRegistration,
   Registration,
   RegistrationDecisionResult,
   RegistrationFilters,
@@ -20,6 +21,20 @@ export const registrationKeys = {
   all: ['registrations'] as const,
   list: (tournamentId: number, filters: RegistrationFilters) =>
     ['registrations', 'list', tournamentId, filters] as const,
+  mine: ['registrations', 'mine'] as const,
+}
+
+/**
+ * "Mis inscripciones" — tournaments where the current user enrolled a team as
+ * delegate, with status. Independent of any other per-tournament role.
+ */
+export function useMyRegistrations(enabled = true) {
+  return useQuery({
+    queryKey: registrationKeys.mine,
+    enabled,
+    queryFn: ({ signal }) =>
+      apiClient.get<MyRegistration[]>('/me/registrations', undefined, signal),
+  })
 }
 
 /** Organizer inbox — paginated, pending-first (backend ordered). */

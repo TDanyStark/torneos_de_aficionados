@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import {
   useFieldArray,
   useForm,
+  useWatch,
   type Control,
   type UseFormSetValue,
 } from 'react-hook-form'
@@ -66,7 +67,7 @@ export function SelfRegistrationForm({
     name: 'players',
   })
 
-  const logoUrl = form.watch('logo_url')
+  const logoUrl = useWatch({ control: form.control, name: 'logo_url' })
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
