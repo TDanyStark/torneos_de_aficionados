@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Infrastructure\Sport\Football;
 
 use App\Domain\Sport\Contracts\SportModule;
+use App\Domain\Sport\Contracts\StandingsStrategy;
 
 /**
- * Football sport module (covers 11/8/5/micro variants). Phase 1 skeleton;
- * live-match recording, scoring and standings strategy arrive in Phase 5.
+ * Football sport module (covers 11/8/5/micro variants). Standings strategy
+ * arrives in Phase 4; live-match recording arrives in Phase 5.
  */
 final class FootballModule implements SportModule
 {
+    private ?StandingsStrategy $standingsStrategy = null;
+
     public function key(): string
     {
         return 'football';
@@ -37,5 +40,10 @@ final class FootballModule implements SportModule
     public function allowsDraws(): bool
     {
         return true;
+    }
+
+    public function standingsStrategy(): StandingsStrategy
+    {
+        return $this->standingsStrategy ??= new FootballStandingsStrategy();
     }
 }

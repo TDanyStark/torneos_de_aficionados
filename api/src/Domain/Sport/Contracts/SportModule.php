@@ -35,4 +35,11 @@ interface SportModule
      * Whether this sport allows draws (affects standings/knockout resolution).
      */
     public function allowsDraws(): bool;
+
+    /**
+     * Standings computation strategy for this sport. The core delegates HOW
+     * points/metrics are scored and how ties are broken to this strategy while
+     * keeping the table structure (rows, order, positions) generic.
+     */
+    public function standingsStrategy(): StandingsStrategy;
 }
