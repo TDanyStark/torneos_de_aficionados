@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Application\Actions\Ad\CreateAdCreativeAction;
+use App\Application\Actions\Ad\CreateAdSlotAction;
+use App\Application\Actions\Ad\DeleteAdCreativeAction;
+use App\Application\Actions\Ad\DeleteAdSlotAction;
+use App\Application\Actions\Ad\ListAdSlotsAction;
+use App\Application\Actions\Ad\PublicAdsAction;
+use App\Application\Actions\Ad\TournamentAdsAction;
+use App\Application\Actions\Ad\UpdateAdCreativeAction;
+use App\Application\Actions\Ad\UpdateAdSlotAction;
+use App\Application\Actions\Ad\UploadCreativeMediaAction;
 use App\Application\Actions\AdvancementRule\CreateAdvancementRuleAction;
 use App\Application\Actions\AdvancementRule\DeleteAdvancementRuleAction;
 use App\Application\Actions\AdvancementRule\ListAdvancementRulesAction;
@@ -57,6 +67,7 @@ use App\Application\Actions\Tournament\DeleteTournamentAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
 use App\Application\Actions\Tournament\UpdateTournamentAction;
+use App\Application\Middleware\AdminMiddleware;
 use App\Application\Middleware\JwtAuthMiddleware;
 use App\Application\Middleware\RoleMiddlewareFactory;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -154,6 +165,10 @@ return function (App $app) {
             // Statistics (public). Derived from match_events. Paginated.
             $tournaments->get('/{id}/top-scorers', TopScorersAction::class);
             $tournaments->get('/{id}/cards', CardsAction::class);
+
+            // Ads (public). Tournament slots + global fallback, resolved creative
+            // per placement. {id} is the tournament id.
+            $tournaments->get('/{id}/ads', TournamentAdsAction::class);
         });
 
         // Tournament role removal. {id} is the role id -> authorized inside action.
@@ -275,6 +290,44 @@ return function (App $app) {
         // referee-authorized inside the action). Correction (delete) only.
         $group->group('/match-events', function (Group $matchEvents) {
             $matchEvents->delete('/{id}', DeleteEventAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Publicidad — public read (no auth). Global slots + resolved creative
+        // per placement (default banner when nothing sold).
+        $group->get('/ads', PublicAdsAction::class);
+
+        // Publicidad — admin slot management. Each route guarded by
+        // AdminMiddleware (after JwtAuthMiddleware: reverse add order => JwtAuth
+        // runs first, then Admin).
+        $group->group('/ad-slots', function (Group $adSlots) {
+            $adSlots->get('', ListAdSlotsAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adSlots->post('', CreateAdSlotAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adSlots->put('/{id}', UpdateAdSlotAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adSlots->delete('/{id}', DeleteAdSlotAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Publicidad — admin creative management + media upload.
+        $group->group('/ad-creatives', function (Group $adCreatives) {
+            $adCreatives->post('', CreateAdCreativeAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adCreatives->post('/upload', UploadCreativeMediaAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adCreatives->put('/{id}', UpdateAdCreativeAction::class)
+                ->add(AdminMiddleware::class)
+                ->add(JwtAuthMiddleware::class);
+            $adCreatives->delete('/{id}', DeleteAdCreativeAction::class)
+                ->add(AdminMiddleware::class)
                 ->add(JwtAuthMiddleware::class);
         });
     });

@@ -6,3 +6,9 @@
 !/logs/README.md
 .phpunit.result.cache
 .env
+
+# Uploaded ad media (keep the folder, ignore its contents)
+/public/uploads/*
+!/public/uploads/ads/
+/public/uploads/ads/*
+!/public/uploads/ads/.gitkeep

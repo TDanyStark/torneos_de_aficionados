@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Domain\Ad\AdCreativeRepository;
+use App\Domain\Ad\AdSlotRepository;
 use App\Domain\AdvancementRule\AdvancementRuleRepository;
 use App\Domain\Fixture\BracketSlotRepository;
 use App\Domain\Fixture\MatchEventRepository;
@@ -19,6 +21,8 @@ use App\Domain\Team\TeamRepository;
 use App\Domain\TeamPlayer\TeamPlayerRepository;
 use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\UserRepository;
+use App\Infrastructure\Persistence\Ad\PdoAdCreativeRepository;
+use App\Infrastructure\Persistence\Ad\PdoAdSlotRepository;
 use App\Infrastructure\Persistence\AdvancementRule\PdoAdvancementRuleRepository;
 use App\Infrastructure\Persistence\Fixture\PdoBracketSlotRepository;
 use App\Infrastructure\Persistence\Fixture\PdoMatchEventRepository;
@@ -58,5 +62,7 @@ return function (ContainerBuilder $containerBuilder) {
         BracketSlotRepository::class        => \DI\autowire(PdoBracketSlotRepository::class),
         MatchPeriodRepository::class        => \DI\autowire(PdoMatchPeriodRepository::class),
         MatchEventRepository::class         => \DI\autowire(PdoMatchEventRepository::class),
+        AdSlotRepository::class             => \DI\autowire(PdoAdSlotRepository::class),
+        AdCreativeRepository::class         => \DI\autowire(PdoAdCreativeRepository::class),
     ]);
 };

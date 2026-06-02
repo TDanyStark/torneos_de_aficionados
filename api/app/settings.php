@@ -43,6 +43,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'allowOrigin' => (string) env('CORS_ALLOW_ORIGIN', '*'),
                 ],
                 'adminWhatsapp' => (string) env('ADMIN_WHATSAPP', ''),
+                'appUrl'        => rtrim((string) env('APP_URL', ''), '/'),
             ]);
         }
     ]);
