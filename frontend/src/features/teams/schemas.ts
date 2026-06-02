@@ -59,21 +59,46 @@ export const DEFAULT_ADD_PLAYER_FORM: AddPlayerFormValues = {
   is_delegate: false,
 }
 
-/** Self-registration form (team + optional delegate-player). */
-export const selfRegistrationSchema = z.object({
-  team_name: z.string().min(2, 'El nombre del equipo es obligatorio'),
-  short_name: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
-  logo_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  coach_name: z.string().max(120, 'Máximo 120 caracteres').optional().or(z.literal('')),
-  is_player: z.boolean(),
-  document_id: z.string().optional().or(z.literal('')),
-  full_name: z.string().optional().or(z.literal('')),
+/** A single roster player inside the self-registration form. */
+export const selfRegistrationPlayerSchema = z.object({
+  document_id: z.string().min(3, 'La cédula es obligatoria'),
+  full_name: z.string().min(2, 'El nombre del jugador es obligatorio'),
   birthdate: z.string().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   alias: z.string().max(60, 'Máximo 60 caracteres').optional().or(z.literal('')),
   shirt_number: optionalPositiveIntString,
   position: z.string().optional().or(z.literal('')),
+  /** Photo URL set after uploading via the registration-photo endpoint. */
+  photo_url: z.string().optional().or(z.literal('')),
   is_captain: z.boolean(),
+})
+
+export type SelfRegistrationPlayerValues = z.infer<
+  typeof selfRegistrationPlayerSchema
+>
+
+export const DEFAULT_SELF_REGISTRATION_PLAYER: SelfRegistrationPlayerValues = {
+  document_id: '',
+  full_name: '',
+  birthdate: '',
+  phone: '',
+  alias: '',
+  shirt_number: '',
+  position: '',
+  photo_url: '',
+  is_captain: false,
+}
+
+/** Self-registration form: team data + a roster of at least one player. */
+export const selfRegistrationSchema = z.object({
+  team_name: z.string().min(2, 'El nombre del equipo es obligatorio'),
+  short_name: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
+  /** Logo URL set after uploading via the registration-logo endpoint. */
+  logo_url: z.string().optional().or(z.literal('')),
+  coach_name: z.string().max(120, 'Máximo 120 caracteres').optional().or(z.literal('')),
+  players: z
+    .array(selfRegistrationPlayerSchema)
+    .min(1, 'Debes inscribir al menos un jugador'),
 })
 
 export type SelfRegistrationFormValues = z.infer<typeof selfRegistrationSchema>
@@ -83,13 +108,5 @@ export const DEFAULT_SELF_REGISTRATION_FORM: SelfRegistrationFormValues = {
   short_name: '',
   logo_url: '',
   coach_name: '',
-  is_player: false,
-  document_id: '',
-  full_name: '',
-  birthdate: '',
-  phone: '',
-  alias: '',
-  shirt_number: '',
-  position: '',
-  is_captain: false,
+  players: [{ ...DEFAULT_SELF_REGISTRATION_PLAYER }],
 }

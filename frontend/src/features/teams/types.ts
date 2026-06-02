@@ -134,6 +134,19 @@ export interface Registration {
   updated_at: string
 }
 
+/** A roster player in the self-registration payload. */
+export interface RegistrationPlayerInput {
+  document_id: string
+  full_name: string
+  birthdate?: string | null
+  phone?: string | null
+  alias?: string | null
+  shirt_number?: number | null
+  position?: string | null
+  photo_url?: string | null
+  is_captain?: boolean
+}
+
 /** Self-registration payload (POST /tournaments/{id}/registrations). */
 export interface CreateRegistrationPayload {
   registration_code: string
@@ -141,17 +154,18 @@ export interface CreateRegistrationPayload {
   short_name?: string | null
   logo_url?: string | null
   coach_name?: string | null
-  is_player: boolean
-  document_id?: string
-  full_name?: string
-  birthdate?: string | null
-  photo_url?: string | null
-  phone?: string | null
-  alias?: string | null
-  shirt_number?: number | null
-  position?: string | null
-  is_captain?: boolean
+  players: RegistrationPlayerInput[]
   joined_at_round?: number | null
+}
+
+/** Response of the self-registration logo upload helper. */
+export interface UploadRegistrationLogoResponse {
+  logo_url: string
+}
+
+/** Response of the self-registration player-photo upload helper. */
+export interface UploadRegistrationPhotoResponse {
+  photo_url: string
 }
 
 /** Response of PATCH /registrations/{id}. */

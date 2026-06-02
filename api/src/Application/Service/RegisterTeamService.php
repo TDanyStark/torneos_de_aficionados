@@ -39,14 +39,11 @@ final class RegisterTeamService
      *   - delegate_user_id   int    (the registering user)
      *   - team_name          string
      *   - short_name         ?string
+     *   - coach_name         ?string
      *   - logo_url           ?string
-     *   - is_player          bool   (delegate also plays)
-     *   - document_id        ?string (required if is_player)
-     *   - full_name          ?string
-     *   - birthdate/photo_url/phone ?string
-     *   - shirt_number       ?int
-     *   - position           ?string
-     *   - is_captain         bool
+     *   - players            list<array<string,mixed>>  (>= 1 required)
+     *       each: document_id (req), full_name (req), alias?, birthdate?,
+     *       photo_url?, phone?, shirt_number?, position?, is_captain?, is_delegate?
      *   - is_late            bool
      *   - joined_at_round    ?int
      */
@@ -54,6 +51,58 @@ final class RegisterTeamService
     {
         $delegateUserId = (int) $input['delegate_user_id'];
         $organizerUserId = $tournament->ownerUserId;
+
+        /** @var list<array<string,mixed>> $players */
+        $players = is_array($input['players'] ?? null) ? array_values($input['players']) : [];
+        if (count($players) < 1) {
+            throw new ValidationException([
+                'players' => 'Debes inscribir al menos un jugador.',
+            ]);
+        }
+
+        // Roster cap (NULL = unlimited). The team starts empty, so this only
+        // depends on how many players this single submission carries.
+        if ($tournament->rosterLimit !== null && count($players) > $tournament->rosterLimit) {
+            throw new ValidationException([
+                'players' => "El equipo supera el límite de jugadores ({$tournament->rosterLimit}).",
+            ]);
+        }
+
+        // Pre-validate the batch (identity + dorsal collisions) before any write.
+        $seenDocuments = [];
+        $seenShirts = [];
+        foreach ($players as $index => $p) {
+            $documentId = trim((string) ($p['document_id'] ?? ''));
+            if ($documentId === '') {
+                throw new ValidationException([
+                    "players.$index.document_id" => 'La cédula del jugador es obligatoria.',
+                ]);
+            }
+            $fullName = trim((string) ($p['full_name'] ?? ''));
+            if ($fullName === '') {
+                throw new ValidationException([
+                    "players.$index.full_name" => 'El nombre del jugador es obligatorio.',
+                ]);
+            }
+            if (isset($seenDocuments[$documentId])) {
+                throw new ValidationException([
+                    "players.$index.document_id" => 'La cédula está repetida en la lista de jugadores.',
+                ]);
+            }
+            $seenDocuments[$documentId] = true;
+
+            $shirt = isset($p['shirt_number']) && $p['shirt_number'] !== null && $p['shirt_number'] !== ''
+                ? (int) $p['shirt_number']
+                : null;
+            if ($shirt !== null) {
+                if (isset($seenShirts[$shirt])) {
+                    throw new ValidationException([
+                        "players.$index.shirt_number" => 'El dorsal está repetido en la lista de jugadores.',
+                    ]);
+                }
+                $seenShirts[$shirt] = true;
+            }
+        }
 
         $this->pdo->beginTransaction();
 
@@ -74,65 +123,36 @@ final class RegisterTeamService
                 $this->roles->create($tournament->id, $delegateUserId, 'delegate', $team->id);
             }
 
-            // 3) Optional: the delegate also plays -> create/reuse player + roster.
-            if (!empty($input['is_player'])) {
-                $documentId = trim((string) ($input['document_id'] ?? ''));
-                if ($documentId === '') {
-                    throw new ValidationException([
-                        'document_id' => 'La cédula es obligatoria para inscribirte como jugador.',
-                    ]);
-                }
+            // 3) Create/reuse each roster player under the OWNER organizer pool.
+            foreach ($players as $p) {
+                $documentId = trim((string) $p['document_id']);
+                $fullName = trim((string) $p['full_name']);
 
                 $player = $this->players->findByOrganizerAndDocument($organizerUserId, $documentId);
                 if ($player === null) {
-                    $fullName = trim((string) ($input['full_name'] ?? ''));
-                    if ($fullName === '') {
-                        throw new ValidationException([
-                            'full_name' => 'El nombre completo es obligatorio para inscribirte como jugador.',
-                        ]);
-                    }
                     $player = $this->players->create([
                         'organizer_user_id' => $organizerUserId,
-                        'user_id'           => $delegateUserId,
+                        'user_id'           => null,
                         'document_id'       => $documentId,
                         'full_name'         => $fullName,
-                        'alias'             => $input['alias'] ?? null,
-                        'birthdate'         => $input['birthdate'] ?? null,
-                        'photo_url'         => $input['photo_url'] ?? null,
-                        'phone'             => $input['phone'] ?? null,
+                        'alias'             => $p['alias'] ?? null,
+                        'birthdate'         => $p['birthdate'] ?? null,
+                        'photo_url'         => $p['photo_url'] ?? null,
+                        'phone'             => $p['phone'] ?? null,
                     ]);
-                } elseif ($player->userId === null) {
-                    // Link the pool player to the delegate account if not linked.
-                    $player = $this->players->update($player->id, ['user_id' => $delegateUserId]);
                 }
 
-                $shirtNumber = isset($input['shirt_number']) && $input['shirt_number'] !== null
-                    ? (int) $input['shirt_number']
+                $shirtNumber = isset($p['shirt_number']) && $p['shirt_number'] !== null && $p['shirt_number'] !== ''
+                    ? (int) $p['shirt_number']
                     : null;
-
-                if ($shirtNumber !== null && $this->teamPlayers->shirtNumberTaken($team->id, $shirtNumber)) {
-                    throw new ValidationException([
-                        'shirt_number' => 'El dorsal ya está asignado en este equipo.',
-                    ]);
-                }
-
-                // Enforce roster_limit (NULL = unlimited). The new team starts empty,
-                // so this never blocks the first player when roster_limit >= 1, but the
-                // guard is included for correctness and future custom-field wrapping.
-                if ($tournament->rosterLimit !== null
-                    && $this->teamPlayers->countByTeam($team->id) >= $tournament->rosterLimit) {
-                    throw new ValidationException([
-                        'document_id' => "El equipo alcanzó el límite de jugadores ({$tournament->rosterLimit}).",
-                    ]);
-                }
 
                 $this->teamPlayers->create([
                     'tournament_team_id' => $team->id,
                     'player_id'          => $player->id,
                     'shirt_number'       => $shirtNumber,
-                    'position'           => $input['position'] ?? null,
-                    'is_captain'         => !empty($input['is_captain']),
-                    'is_delegate'        => true,
+                    'position'           => $p['position'] ?? null,
+                    'is_captain'         => !empty($p['is_captain']),
+                    'is_delegate'        => !empty($p['is_delegate']),
                     'status'             => 'active',
                 ]);
             }

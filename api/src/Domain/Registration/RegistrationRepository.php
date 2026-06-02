@@ -24,6 +24,16 @@ interface RegistrationRepository
     public function countByTournament(int $tournamentId): int;
 
     /**
+     * Read-model: the registrations a user submitted as the team delegate,
+     * enriched with tournament (name/slug/logo) and team data, newest first.
+     * Powers the "Mis inscripciones" view. Roles are per-tournament, so this is
+     * scoped strictly to teams where the user is the delegate.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findByDelegateUser(int $userId): array;
+
+    /**
      * Late, APPROVED registrations of a tournament (is_late = 1 AND the team is
      * approved), ordered by joined_at_round ASC then id ASC. Used by the fixture
      * regenerator to find the late team that joined at round K.

@@ -59,6 +59,8 @@ use App\Application\Actions\Referee\UpdateRefereeAction;
 use App\Application\Actions\Registration\CreateRegistrationAction;
 use App\Application\Actions\Registration\ListRegistrationsAction;
 use App\Application\Actions\Registration\UpdateRegistrationAction;
+use App\Application\Actions\Registration\UploadRegistrationLogoAction;
+use App\Application\Actions\Registration\UploadRegistrationPhotoAction;
 use App\Application\Actions\Role\CreateTournamentRoleAction;
 use App\Application\Actions\Role\DeleteTournamentRoleAction;
 use App\Application\Actions\Role\ListTournamentRolesAction;
@@ -188,6 +190,14 @@ return function (App $app) {
             // Registrations. Self-registration is code-gated (no pre-existing role,
             // so NO RoleMiddleware); the inbox listing is organizer-only.
             $tournaments->post('/{id}/registrations', CreateRegistrationAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Self-registration image uploads (code-gated, multipart). Same auth
+            // model as CreateRegistrationAction: JWT + registration_code, no role.
+            // Numeric {id} constraint keeps these clear of the public `/{slug}`.
+            $tournaments->post('/{id:[0-9]+}/registration-logo', UploadRegistrationLogoAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $tournaments->post('/{id:[0-9]+}/registration-photo', UploadRegistrationPhotoAction::class)
                 ->add(JwtAuthMiddleware::class);
             $tournaments->get('/{id}/registrations', ListRegistrationsAction::class)
                 ->add($roleGuard->require('organizer'))

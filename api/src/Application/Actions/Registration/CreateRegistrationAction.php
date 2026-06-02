@@ -63,7 +63,39 @@ final class CreateRegistrationAction extends ApiAction
             throw new ValidationException(['team_name' => 'El nombre del equipo es obligatorio.']);
         }
 
-        $isPlayer = !empty($body['is_player']);
+        // Roster: at least one player, each with cédula + nombre completo.
+        $rawPlayers = is_array($body['players'] ?? null) ? array_values($body['players']) : [];
+        if (count($rawPlayers) < 1) {
+            throw new ValidationException(['players' => 'Debes inscribir al menos un jugador.']);
+        }
+
+        $players = [];
+        foreach ($rawPlayers as $index => $p) {
+            if (!is_array($p)) {
+                throw new ValidationException(["players.$index" => 'Jugador inválido.']);
+            }
+            $documentId = isset($p['document_id']) ? trim((string) $p['document_id']) : '';
+            if ($documentId === '') {
+                throw new ValidationException(["players.$index.document_id" => 'La cédula del jugador es obligatoria.']);
+            }
+            $fullName = isset($p['full_name']) ? trim((string) $p['full_name']) : '';
+            if ($fullName === '') {
+                throw new ValidationException(["players.$index.full_name" => 'El nombre del jugador es obligatorio.']);
+            }
+
+            $players[] = [
+                'document_id'  => $documentId,
+                'full_name'    => $fullName,
+                'alias'        => isset($p['alias']) && trim((string) $p['alias']) !== '' ? trim((string) $p['alias']) : null,
+                'birthdate'    => isset($p['birthdate']) && $p['birthdate'] !== '' ? (string) $p['birthdate'] : null,
+                'photo_url'    => isset($p['photo_url']) && $p['photo_url'] !== '' ? (string) $p['photo_url'] : null,
+                'phone'        => isset($p['phone']) && $p['phone'] !== '' ? (string) $p['phone'] : null,
+                'shirt_number' => isset($p['shirt_number']) && $p['shirt_number'] !== '' ? (int) $p['shirt_number'] : null,
+                'position'     => isset($p['position']) && trim((string) $p['position']) !== '' ? trim((string) $p['position']) : null,
+                'is_captain'   => !empty($p['is_captain']),
+                'is_delegate'  => !empty($p['is_delegate']),
+            ];
+        }
 
         // Late registration flags (effect on fixtures lives in Fase 4).
         $isLate = false;
@@ -78,7 +110,6 @@ final class CreateRegistrationAction extends ApiAction
         $shortName = isset($body['short_name']) && $body['short_name'] !== '' ? (string) $body['short_name'] : null;
         $coachName = isset($body['coach_name']) && trim((string) $body['coach_name']) !== '' ? trim((string) $body['coach_name']) : null;
         $logoUrl   = isset($body['logo_url']) && $body['logo_url'] !== '' ? (string) $body['logo_url'] : null;
-        $alias     = isset($body['alias']) && trim((string) $body['alias']) !== '' ? trim((string) $body['alias']) : null;
 
         $registration = $this->registerTeam->execute($tournament, [
             'delegate_user_id' => $user->id,
@@ -86,16 +117,7 @@ final class CreateRegistrationAction extends ApiAction
             'short_name'       => $shortName,
             'coach_name'       => $coachName,
             'logo_url'         => $logoUrl,
-            'is_player'        => $isPlayer,
-            'document_id'      => isset($body['document_id']) ? trim((string) $body['document_id']) : null,
-            'full_name'        => isset($body['full_name']) ? trim((string) $body['full_name']) : null,
-            'alias'            => $alias,
-            'birthdate'        => isset($body['birthdate']) && $body['birthdate'] !== '' ? (string) $body['birthdate'] : null,
-            'photo_url'        => isset($body['photo_url']) && $body['photo_url'] !== '' ? (string) $body['photo_url'] : null,
-            'phone'            => isset($body['phone']) && $body['phone'] !== '' ? (string) $body['phone'] : null,
-            'shirt_number'     => isset($body['shirt_number']) && $body['shirt_number'] !== '' ? (int) $body['shirt_number'] : null,
-            'position'         => isset($body['position']) && $body['position'] !== '' ? (string) $body['position'] : null,
-            'is_captain'       => !empty($body['is_captain']),
+            'players'          => $players,
             'is_late'          => $isLate,
             'joined_at_round'  => $joinedAtRound,
         ]);

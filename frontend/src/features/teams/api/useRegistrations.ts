@@ -12,6 +12,8 @@ import type {
   RegistrationDecisionResult,
   RegistrationFilters,
   RegistrationStatus,
+  UploadRegistrationLogoResponse,
+  UploadRegistrationPhotoResponse,
 } from '../types'
 
 export const registrationKeys = {
@@ -53,6 +55,42 @@ export function useCreateRegistration(tournamentId: number) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: registrationKeys.all })
+    },
+  })
+}
+
+/**
+ * Code-gated team-logo upload for self-registration. Posts multipart `file` +
+ * `registration_code`; the backend crops to 398x398 and returns the URL only.
+ */
+export function useUploadRegistrationLogo(tournamentId: number) {
+  return useMutation({
+    mutationFn: ({ file, code }: { file: File; code: string }) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('registration_code', code)
+      return apiClient.postForm<UploadRegistrationLogoResponse>(
+        `/tournaments/${tournamentId}/registration-logo`,
+        formData,
+      )
+    },
+  })
+}
+
+/**
+ * Code-gated player-photo upload for self-registration. Posts multipart `file` +
+ * `registration_code`; the backend crops to 398x398 and returns the URL only.
+ */
+export function useUploadRegistrationPhoto(tournamentId: number) {
+  return useMutation({
+    mutationFn: ({ file, code }: { file: File; code: string }) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('registration_code', code)
+      return apiClient.postForm<UploadRegistrationPhotoResponse>(
+        `/tournaments/${tournamentId}/registration-photo`,
+        formData,
+      )
     },
   })
 }

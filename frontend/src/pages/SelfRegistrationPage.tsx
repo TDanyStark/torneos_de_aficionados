@@ -124,8 +124,8 @@ export function SelfRegistrationPage() {
             <CardHeader>
               <CardTitle>Inscribe tu equipo</CardTitle>
               <CardDescription>
-                Completa los datos del equipo. Opcionalmente puedes inscribirte
-                también como jugador.
+                Completa los datos del equipo y agrega la lista de jugadores.
+                Puedes tomarles foto o subir una desde tu galería.
               </CardDescription>
             </CardHeader>
             <CardContent>
