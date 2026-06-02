@@ -1,4 +1,6 @@
-import { CalendarClock, MapPin } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarClock, MapPin, Radio, Timer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { Match } from '../types'
 import { MatchStatusBadge } from './MatchStatusBadge'
 
@@ -6,6 +8,8 @@ interface MatchRowProps {
   match: Match
   /** Resolver for teamId → display name. */
   nameOf: (teamId: number | null | undefined) => string
+  /** Show a referee entry-point button (organizer/referee context). */
+  showRefereeLink?: boolean
 }
 
 function formatDate(value: string | null): string | null {
@@ -21,25 +25,29 @@ function formatDate(value: string | null): string | null {
 }
 
 /** A single match line: home vs away with score, status and metadata. */
-export function MatchRow({ match, nameOf }: MatchRowProps) {
+export function MatchRow({ match, nameOf, showRefereeLink }: MatchRowProps) {
   const isFinished = match.status === 'finished'
   const date = formatDate(match.scheduled_at)
+  const isLive = match.status === 'live' || match.status === 'paused'
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-3">
+      <Link
+        to={`/partido/${match.id}`}
+        className="hover:bg-muted/50 -m-1 flex flex-1 items-center gap-3 rounded p-1 transition-colors"
+      >
         <span className="flex-1 text-right text-sm font-medium">
           {nameOf(match.home_team_id)}
         </span>
         <span className="bg-muted min-w-14 rounded px-2 py-1 text-center text-sm font-semibold tabular-nums">
-          {isFinished
+          {isFinished || isLive
             ? `${match.home_score ?? 0} - ${match.away_score ?? 0}`
             : 'vs'}
         </span>
         <span className="flex-1 text-left text-sm font-medium">
           {nameOf(match.away_team_id)}
         </span>
-      </div>
+      </Link>
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs sm:justify-end">
         {date ? (
@@ -55,6 +63,21 @@ export function MatchRow({ match, nameOf }: MatchRowProps) {
           </span>
         ) : null}
         <MatchStatusBadge status={match.status} />
+        {isLive ? (
+          <Button asChild variant="ghost" size="icon" className="size-7">
+            <Link to={`/partido/${match.id}`} aria-label="Ver en vivo">
+              <Radio className="text-destructive size-4" />
+            </Link>
+          </Button>
+        ) : null}
+        {showRefereeLink && !isFinished ? (
+          <Button asChild variant="outline" size="sm" className="h-7">
+            <Link to={`/arbitro/partido/${match.id}`}>
+              <Timer className="size-3.5" />
+              Dirigir
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </div>
   )

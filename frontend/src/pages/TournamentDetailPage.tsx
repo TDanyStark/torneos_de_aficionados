@@ -5,6 +5,8 @@ import {
   CalendarDays,
   GitBranch,
   ListOrdered,
+  ShieldAlert,
+  Trophy,
   Users,
 } from 'lucide-react'
 import {
@@ -106,6 +108,18 @@ export function TournamentDetailPage() {
               <Link to={`/tournaments/${data.slug}/bracket`}>
                 <GitBranch className="size-4" />
                 Cuadro
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/top-scorers`}>
+                <Trophy className="size-4" />
+                Goleadores
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/cards`}>
+                <ShieldAlert className="size-4" />
+                Disciplina
               </Link>
             </Button>
           </div>

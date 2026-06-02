@@ -19,6 +19,10 @@ import { FixturesPage } from '@/pages/FixturesPage'
 import { StandingsPage } from '@/pages/StandingsPage'
 import { BracketPage } from '@/pages/BracketPage'
 import { StageFixturesPage } from '@/pages/StageFixturesPage'
+import { PublicMatchPage } from '@/pages/PublicMatchPage'
+import { RefereeMatchPage } from '@/pages/RefereeMatchPage'
+import { TopScorersPage } from '@/pages/TopScorersPage'
+import { DisciplinePage } from '@/pages/DisciplinePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -52,6 +56,14 @@ export const router = createBrowserRouter([
       { path: '/tournaments/:slug/standings', element: <StandingsPage /> },
       { path: '/tournaments/:slug/bracket', element: <BracketPage /> },
 
+      // Public live match + statistics (Fase 5).
+      { path: '/partido/:id', element: <PublicMatchPage /> },
+      {
+        path: '/tournaments/:slug/top-scorers',
+        element: <TopScorersPage />,
+      },
+      { path: '/tournaments/:slug/cards', element: <DisciplinePage /> },
+
       {
         element: <ProtectedRoute />,
         children: [
@@ -74,6 +86,13 @@ export const router = createBrowserRouter([
             element: <StageFixturesPage />,
           },
           { path: '/players/:id/history', element: <PlayerHistoryPage /> },
+
+          // Referee live-match control (Fase 5). Auth required; referee /
+          // organizer enforced server-side (403 surfaced in-page).
+          {
+            path: '/arbitro/partido/:id',
+            element: <RefereeMatchPage />,
+          },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
