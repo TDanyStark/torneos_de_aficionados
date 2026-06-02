@@ -255,6 +255,47 @@ export interface CreateRolePayload {
 }
 
 /* ------------------------------------------------------------------ */
+/* Referees (Fase 13 — tournament-level referee directory)             */
+/* ------------------------------------------------------------------ */
+
+/** Referee entity — GET /tournaments/{id}/referees. */
+export interface Referee {
+  id: number
+  tournament_id: number
+  name: string
+  created_at?: string
+  updated_at?: string
+}
+
+/** POST /tournaments/{id}/referees and PUT /referees/{id}. */
+export interface RefereePayload {
+  name: string
+}
+
+/** POST /matches/{id}/referee — `null` clears the assignment. */
+export interface AssignMatchRefereePayload {
+  referee_id: number | null
+}
+
+/**
+ * POST /stages/{id}/assign-referee — bulk assignment. Omitting `round_id`
+ * (or sending null) applies to every match of the stage; a `round_id` scopes
+ * the bulk update to that round only. `referee_id: null` clears the referee.
+ */
+export interface AssignStageRefereePayload {
+  referee_id: number | null
+  round_id?: number | null
+}
+
+/** Result of POST /stages/{id}/assign-referee. */
+export interface AssignStageRefereeResult {
+  stage_id: number
+  referee_id: number | null
+  round_id: number | null
+  matches_updated: number
+}
+
+/* ------------------------------------------------------------------ */
 /* List filters (URL-driven)                                           */
 /* ------------------------------------------------------------------ */
 

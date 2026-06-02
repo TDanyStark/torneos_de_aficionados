@@ -50,6 +50,12 @@ use App\Application\Actions\GroupTeam\RemoveTeamFromGroupAction;
 use App\Application\Actions\Health\HealthAction;
 use App\Application\Actions\Player\LookupPlayerAction;
 use App\Application\Actions\Player\PlayerHistoryAction;
+use App\Application\Actions\Referee\AssignMatchRefereeAction;
+use App\Application\Actions\Referee\AssignStageRefereeAction;
+use App\Application\Actions\Referee\CreateRefereeAction;
+use App\Application\Actions\Referee\DeleteRefereeAction;
+use App\Application\Actions\Referee\ListRefereesAction;
+use App\Application\Actions\Referee\UpdateRefereeAction;
 use App\Application\Actions\Registration\CreateRegistrationAction;
 use App\Application\Actions\Registration\ListRegistrationsAction;
 use App\Application\Actions\Registration\UpdateRegistrationAction;
@@ -194,6 +200,13 @@ return function (App $app) {
             // Ads (public). Tournament slots + global fallback, resolved creative
             // per placement. {id} is the tournament id.
             $tournaments->get('/{id}/ads', TournamentAdsAction::class);
+
+            // Referees directory (Fase 13). List public; create organizer-only
+            // ({id} is the tournament id -> RoleMiddleware guards it).
+            $tournaments->get('/{id}/referees', ListRefereesAction::class);
+            $tournaments->post('/{id}/referees', CreateRefereeAction::class)
+                ->add($roleGuard->require('organizer'))
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Tournament role removal. {id} is the role id -> authorized inside action.
@@ -235,6 +248,12 @@ return function (App $app) {
             // stage id => no collision with the single-segment routes above.
             $stages->post('/{id}/rounds', CreateRoundAction::class)
                 ->add(JwtAuthMiddleware::class);
+
+            // Bulk match-sheet referee assignment (Fase 13). {id} is the stage
+            // id -> tournament resolved + authorized inside the action. Assigns
+            // to all stage matches, or only a round when round_id is given.
+            $stages->post('/{id}/assign-referee', AssignStageRefereeAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Rounds module (Fase 14). {id} is the round id -> tournament resolved
@@ -247,6 +266,15 @@ return function (App $app) {
 
             // Manual match creation under a round.
             $rounds->post('/{id}/matches', CreateMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
+        });
+
+        // Referees module (Fase 13). {id} is the referee id -> tournament
+        // resolved via referee and authorized inside the action.
+        $group->group('/referees', function (Group $referees) {
+            $referees->put('/{id}', UpdateRefereeAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $referees->delete('/{id}', DeleteRefereeAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
 
@@ -334,6 +362,11 @@ return function (App $app) {
             $matches->post('/{id}/events', RecordEventAction::class)
                 ->add(JwtAuthMiddleware::class);
             $matches->post('/{id}/finish', FinishMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Match-sheet referee assignment (Fase 13). Body { referee_id:
+            // int|null }. Distinct from referee_user_id (live control).
+            $matches->post('/{id}/referee', AssignMatchRefereeAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Public live read model (polling).

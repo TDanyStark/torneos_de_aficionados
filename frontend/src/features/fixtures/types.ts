@@ -53,6 +53,8 @@ export interface Match {
   started_at: string | null
   finished_at: string | null
   referee_user_id: number | null
+  /** Fase 13 — assigned referee (directory entity), separate from referee_user_id (live-control user). */
+  referee_id: number | null
   leg: number | null
   bracket_slot_id: number | null
   created_at: string

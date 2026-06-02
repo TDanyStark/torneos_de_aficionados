@@ -109,12 +109,12 @@ final class PdoMatchRepository implements MatchRepository
             'INSERT INTO matches
                 (tournament_id, stage_id, group_id, round_id, home_team_id, away_team_id,
                  home_score, away_score, winner_team_id, status, venue, scheduled_at,
-                 started_at, finished_at, referee_user_id, leg, bracket_slot_id,
+                 started_at, finished_at, referee_user_id, referee_id, leg, bracket_slot_id,
                  created_at, updated_at)
              VALUES
                 (:tournament_id, :stage_id, :group_id, :round_id, :home_team_id, :away_team_id,
                  :home_score, :away_score, :winner_team_id, :status, :venue, :scheduled_at,
-                 :started_at, :finished_at, :referee_user_id, :leg, :bracket_slot_id,
+                 :started_at, :finished_at, :referee_user_id, :referee_id, :leg, :bracket_slot_id,
                  NOW(), NOW())'
         );
         $stmt->execute([
@@ -133,6 +133,7 @@ final class PdoMatchRepository implements MatchRepository
             'started_at'      => $data['started_at'] ?? null,
             'finished_at'     => $data['finished_at'] ?? null,
             'referee_user_id' => $data['referee_user_id'] ?? null,
+            'referee_id'      => $data['referee_id'] ?? null,
             'leg'             => $data['leg'] ?? 1,
             'bracket_slot_id' => $data['bracket_slot_id'] ?? null,
         ]);
@@ -157,7 +158,7 @@ final class PdoMatchRepository implements MatchRepository
             'group_id', 'round_id', 'home_team_id', 'away_team_id',
             'home_score', 'away_score', 'winner_team_id', 'status',
             'venue', 'scheduled_at', 'started_at', 'finished_at',
-            'referee_user_id', 'leg', 'bracket_slot_id',
+            'referee_user_id', 'referee_id', 'leg', 'bracket_slot_id',
         ];
 
         $sets = [];

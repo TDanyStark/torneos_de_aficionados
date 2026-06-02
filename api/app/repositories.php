@@ -13,6 +13,7 @@ use App\Domain\Fixture\RoundRepository;
 use App\Domain\Group\GroupRepository;
 use App\Domain\GroupTeam\GroupTeamRepository;
 use App\Domain\Player\PlayerRepository;
+use App\Domain\Referee\RefereeRepository;
 use App\Domain\Registration\RegistrationRepository;
 use App\Domain\Role\TournamentUserRoleRepository;
 use App\Domain\Sport\SportRepository;
@@ -32,6 +33,7 @@ use App\Infrastructure\Persistence\Fixture\PdoRoundRepository;
 use App\Infrastructure\Persistence\Group\PdoGroupRepository;
 use App\Infrastructure\Persistence\GroupTeam\PdoGroupTeamRepository;
 use App\Infrastructure\Persistence\Player\PdoPlayerRepository;
+use App\Infrastructure\Persistence\Referee\PdoRefereeRepository;
 use App\Infrastructure\Persistence\Registration\PdoRegistrationRepository;
 use App\Infrastructure\Persistence\Role\PdoTournamentUserRoleRepository;
 use App\Infrastructure\Persistence\Sport\PdoSportRepository;
@@ -56,6 +58,7 @@ return function (ContainerBuilder $containerBuilder) {
         PlayerRepository::class             => \DI\autowire(PdoPlayerRepository::class),
         TeamPlayerRepository::class         => \DI\autowire(PdoTeamPlayerRepository::class),
         RegistrationRepository::class       => \DI\autowire(PdoRegistrationRepository::class),
+        RefereeRepository::class            => \DI\autowire(PdoRefereeRepository::class),
         GroupTeamRepository::class          => \DI\autowire(PdoGroupTeamRepository::class),
         RoundRepository::class              => \DI\autowire(PdoRoundRepository::class),
         MatchRepository::class              => \DI\autowire(PdoMatchRepository::class),
