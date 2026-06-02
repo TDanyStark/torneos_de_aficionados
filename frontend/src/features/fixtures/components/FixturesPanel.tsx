@@ -17,15 +17,22 @@ import type { Match, Round } from '@/features/fixtures/types'
 
 interface FixturesPanelProps {
   tournament: Tournament
+  /**
+   * Optional active phase (stage). When provided, the calendar is scoped to
+   * that stage: the group selector lists only that stage's groups and the
+   * round/match lists are filtered by `stage_id` (client-side). When absent,
+   * falls back to the legacy all-stages behaviour (Fase 8/9/10).
+   */
+  stageId?: number
 }
 
 /**
- * Fixtures/calendar panel for the tournament hub — extracted verbatim from the
- * legacy FixturesPage body (group/round selectors via useFixtureFilters,
- * RoundSection list, `between_matches` ad scoped to the tournament). Behaviour
- * is unchanged; the panel receives the already-resolved tournament.
+ * Fixtures/calendar panel for the tournament hub. Phase-aware (Fase 11): when a
+ * `stageId` is supplied the groups, rounds and matches are scoped to that
+ * single stage. Behaviour is otherwise unchanged (RoundSection list,
+ * `between_matches` ad scoped to the tournament).
  */
-export function FixturesPanel({ tournament }: FixturesPanelProps) {
+export function FixturesPanel({ tournament, stageId }: FixturesPanelProps) {
   const tournamentId = tournament.id
 
   const roles = useAuthStore((s) => s.roles)
@@ -38,30 +45,56 @@ export function FixturesPanel({ tournament }: FixturesPanelProps) {
 
   const { filters, setFilters } = useFixtureFilters()
   const stages = useStages(tournamentId || undefined)
-  const { groups } = useTournamentGroups(stages.data)
+
+  // When a phase is selected, scope the group flat-list to that single stage.
+  const scopedStages = useMemo(
+    () =>
+      stageId != null
+        ? (stages.data ?? []).filter((s) => s.id === stageId)
+        : stages.data,
+    [stages.data, stageId],
+  )
+  const { groups } = useTournamentGroups(scopedStages)
+
   const rounds = useRounds(tournamentId || undefined)
   const matches = useMatches(tournamentId || undefined, filters)
   const { nameOf } = useTeamNameMap(tournamentId || undefined)
 
+  // Client-side stage scoping: rounds and matches carry `stage_id`.
+  const scopedRounds = useMemo(
+    () =>
+      stageId != null
+        ? (rounds.data ?? []).filter((r) => r.stage_id === stageId)
+        : (rounds.data ?? []),
+    [rounds.data, stageId],
+  )
+  const scopedMatches = useMemo(
+    () =>
+      stageId != null
+        ? (matches.data ?? []).filter((m) => m.stage_id === stageId)
+        : (matches.data ?? []),
+    [matches.data, stageId],
+  )
+
   const roundById = useMemo(() => {
     const m = new Map<number, Round>()
-    for (const r of rounds.data ?? []) m.set(r.id, r)
+    for (const r of scopedRounds) m.set(r.id, r)
     return m
-  }, [rounds.data])
+  }, [scopedRounds])
 
   // Distinct round numbers available (optionally scoped to the selected group).
   const roundNumbers = useMemo(() => {
-    const source = (rounds.data ?? []).filter((r) =>
+    const source = scopedRounds.filter((r) =>
       filters.group ? r.group_id === filters.group : true,
     )
     const nums = Array.from(new Set(source.map((r) => r.number)))
     return nums.sort((a, b) => a - b)
-  }, [rounds.data, filters.group])
+  }, [scopedRounds, filters.group])
 
   // Group the (already server-filtered) matches by their round number.
   const grouped = useMemo(() => {
     const byNumber = new Map<number, Match[]>()
-    for (const match of matches.data ?? []) {
+    for (const match of scopedMatches) {
       const round =
         match.round_id != null ? roundById.get(match.round_id) : undefined
       const number = round?.number ?? 0
@@ -70,7 +103,7 @@ export function FixturesPanel({ tournament }: FixturesPanelProps) {
       byNumber.set(number, list)
     }
     return Array.from(byNumber.entries()).sort((a, b) => a[0] - b[0])
-  }, [matches.data, roundById])
+  }, [scopedMatches, roundById])
 
   const loading = rounds.isLoading || matches.isLoading
 
@@ -105,9 +138,7 @@ export function FixturesPanel({ tournament }: FixturesPanelProps) {
       ) : (
         <div className="space-y-6">
           {grouped.map(([number, roundMatches], index) => {
-            const round = (rounds.data ?? []).find(
-              (r) => r.number === number,
-            )
+            const round = scopedRounds.find((r) => r.number === number)
             // Insert one between-matches ad roughly mid-list (after the first
             // round when there's more than one). Renders nothing if unsold.
             const showAd = index === 0 && grouped.length > 1

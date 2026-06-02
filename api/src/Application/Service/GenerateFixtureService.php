@@ -160,9 +160,24 @@ final class GenerateFixtureService
 
     private function buildKnockoutPlan(Stage $stage): FixturePlan
     {
-        // Knockout entrants must be declared as bracket sources. For the MVP we
-        // seed from the stage's group_teams of any feeder groups (if present),
-        // otherwise from approved teams ordering. Sources are opaque strings.
+        // Fixed-size bracket: build EXACTLY bracket_size placeholder entrants.
+        // bracket_size values are powers of two (4/8/16/32/64/128) so
+        // KnockoutBuilder accepts them. Participants may be unknown at creation
+        // time, so each first-round source is a neutral 'seed:{n}' label that the
+        // bracket renders as TBD until results/seedings are filled in.
+        if ($stage->bracketSize !== null) {
+            $entrants = [];
+            for ($n = 1; $n <= $stage->bracketSize; $n++) {
+                $entrants[] = sprintf('seed:%d', $n);
+            }
+
+            return $this->generator->generate('knockout', [], 1, $entrants);
+        }
+
+        // Legacy path (bracket_size null): knockout entrants must be declared as
+        // bracket sources. We seed from the stage's group_teams of any feeder
+        // groups (if present), otherwise from approved teams ordering. Sources
+        // are opaque strings.
         $groups = $this->groups->findByStage($stage->id);
         $entrants = [];
 

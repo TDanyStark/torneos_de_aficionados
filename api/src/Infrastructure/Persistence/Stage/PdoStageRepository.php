@@ -46,9 +46,9 @@ final class PdoStageRepository implements StageRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO stages
-                (tournament_id, name, type, position, legs, tiebreakers, status, created_at, updated_at)
+                (tournament_id, name, type, position, legs, bracket_size, tiebreakers, status, created_at, updated_at)
              VALUES
-                (:tournament_id, :name, :type, :position, :legs, :tiebreakers, :status, NOW(), NOW())'
+                (:tournament_id, :name, :type, :position, :legs, :bracket_size, :tiebreakers, :status, NOW(), NOW())'
         );
         $stmt->execute([
             'tournament_id' => $tournamentId,
@@ -56,6 +56,7 @@ final class PdoStageRepository implements StageRepository
             'type'          => $data['type'],
             'position'      => $data['position'],
             'legs'          => $data['legs'],
+            'bracket_size'  => $data['bracket_size'] ?? null,
             'tiebreakers'   => $this->encodeTiebreakers($data['tiebreakers'] ?? null),
             'status'        => $data['status'] ?? 'pending',
         ]);
@@ -73,7 +74,7 @@ final class PdoStageRepository implements StageRepository
      */
     public function update(int $id, array $data): Stage
     {
-        $allowed = ['name', 'type', 'position', 'legs', 'status'];
+        $allowed = ['name', 'type', 'position', 'legs', 'bracket_size', 'status'];
 
         $sets = [];
         $params = ['id' => $id];

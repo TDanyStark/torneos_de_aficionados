@@ -439,6 +439,18 @@ export function TournamentEditPage() {
         </form>
       </Form>
 
+      {/* Fases — solo el organizador (dueño) del torneo. */}
+      {isOrganizer ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fases</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StageManager tournamentId={tournament.id} />
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Publicidad — solo administradores de la plataforma. */}
       {isAdmin ? (
         <Card>

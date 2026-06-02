@@ -27,6 +27,7 @@ use App\Application\Actions\Fixture\ListRoundsAction;
 use App\Application\Actions\Fixture\RegenerateFixturesAction;
 use App\Application\Actions\Fixture\UpdateMatchAction;
 use App\Application\Actions\Group\CreateGroupAction;
+use App\Application\Actions\Group\DistributeGroupsAction;
 use App\Application\Actions\Live\CardsAction;
 use App\Application\Actions\Live\DeleteEventAction;
 use App\Application\Actions\Live\EndPeriodAction;
@@ -204,6 +205,12 @@ return function (App $app) {
             // Groups (nested under a stage). List public; create organizer-only.
             $stages->get('/{id}/groups', ListGroupsAction::class);
             $stages->post('/{id}/groups', CreateGroupAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Auto-distribute approved teams into N groups (organizer). Two
+            // segments after the stage id => no collision with the single-segment
+            // `/{id}/groups` create route.
+            $stages->post('/{id}/groups/distribute', DistributeGroupsAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Advancement rules (nested under a stage).

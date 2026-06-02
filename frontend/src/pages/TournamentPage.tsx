@@ -12,7 +12,11 @@ import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { cn } from '@/lib/utils'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
+import { useStages } from '@/features/tournaments/api/useStages'
 import { TournamentStatusBadge } from '@/features/tournaments/components/TournamentStatusBadge'
+import { PhaseSelector } from '@/features/tournaments/components/PhaseSelector'
+import { useStageParam } from '@/features/tournaments/hooks/useStageParam'
+import { useActiveStage } from '@/features/tournaments/hooks/useActiveStage'
 import {
   TOURNAMENT_TABS,
   useTournamentTabs,
@@ -44,6 +48,13 @@ export function TournamentPage() {
   const { slug } = useParams<{ slug: string }>()
   const { data, isLoading, isError, error } = useTournamentDetail(slug)
   const { tab, setTab } = useTournamentTabs()
+
+  // Single source of truth for stages: lifted here so the phase selector and
+  // the phase-aware panels (Fixtures/Tabla) share one resolved active stage.
+  const stages = useStages(data?.id || undefined)
+  const { stageId: urlStageId, setStageId } = useStageParam()
+  const { stageId: activeStageId } = useActiveStage(stages.data, urlStageId)
+  const hasMultipleStages = (stages.data ?? []).length > 1
 
   // Lightweight SEO: keep the document title in sync with the tournament and
   // the active tab (e.g. "Liga Barrial · Fixtures").
@@ -93,6 +104,16 @@ export function TournamentPage() {
         <TournamentStatusBadge status={data.status} />
       </div>
 
+      {/* Phase selector — only shown for multi-stage tournaments. Scopes the
+          fixtures/standings views to the selected stage. */}
+      {hasMultipleStages && activeStageId != null ? (
+        <PhaseSelector
+          stages={stages.data ?? []}
+          value={activeStageId}
+          onChange={(id) => setStageId(id)}
+        />
+      ) : null}
+
       {/* Horizontally scrollable, accessible tab bar (mobile-first). */}
       <div
         role="tablist"
@@ -125,8 +146,18 @@ export function TournamentPage() {
 
       <div role="tabpanel">
         {tab === 'resumen' ? <ResumenPanel tournament={data} /> : null}
-        {tab === 'fixtures' ? <FixturesPanel tournament={data} /> : null}
-        {tab === 'tabla' ? <TablaPanel tournament={data} /> : null}
+        {tab === 'fixtures' ? (
+          <FixturesPanel
+            tournament={data}
+            stageId={hasMultipleStages ? (activeStageId ?? undefined) : undefined}
+          />
+        ) : null}
+        {tab === 'tabla' ? (
+          <TablaPanel
+            tournament={data}
+            stageId={hasMultipleStages ? (activeStageId ?? undefined) : undefined}
+          />
+        ) : null}
         {tab === 'equipos' ? <EquiposPanel tournament={data} /> : null}
         {tab === 'goleadores' ? <GoleadoresPanel tournament={data} /> : null}
         {tab === 'disciplina' ? <DisciplinaPanel tournament={data} /> : null}

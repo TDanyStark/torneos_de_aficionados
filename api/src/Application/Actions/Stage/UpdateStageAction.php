@@ -80,6 +80,22 @@ final class UpdateStageAction extends ApiAction
                 $data['status'] = $status;
             }
         }
+        if (array_key_exists('bracket_size', $body)) {
+            // Effective type = incoming type (if valid) else the stored type.
+            $effectiveType = isset($data['type']) ? (string) $data['type'] : $stage->type;
+            $raw = $body['bracket_size'];
+            if ($effectiveType !== 'knockout' || $raw === '' || $raw === null) {
+                // Non-knockout stages never carry a bracket size.
+                $data['bracket_size'] = null;
+            } else {
+                $bracketSize = (int) $raw;
+                if (!StageValidator::isValidBracketSize($bracketSize)) {
+                    $errors['bracket_size'] = 'El tamaño del cuadro debe ser 4, 8, 16, 32, 64 o 128.';
+                } else {
+                    $data['bracket_size'] = $bracketSize;
+                }
+            }
+        }
         if (array_key_exists('tiebreakers', $body)) {
             $data['tiebreakers'] = StageValidator::normalizeTiebreakers($body['tiebreakers']);
         }

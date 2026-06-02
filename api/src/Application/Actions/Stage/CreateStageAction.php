@@ -51,17 +51,28 @@ final class CreateStageAction extends ApiAction
         if (!StageValidator::isValidLegs($legs)) {
             $errors['legs'] = 'El número de partidos (legs) debe ser 1 o 2.';
         }
+
+        // bracket_size only applies to knockout stages; ignored/null otherwise.
+        $bracketSize = null;
+        if ($type === 'knockout' && isset($body['bracket_size']) && $body['bracket_size'] !== '' && $body['bracket_size'] !== null) {
+            $bracketSize = (int) $body['bracket_size'];
+            if (!StageValidator::isValidBracketSize($bracketSize)) {
+                $errors['bracket_size'] = 'El tamaño del cuadro debe ser 4, 8, 16, 32, 64 o 128.';
+            }
+        }
+
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
 
         $stage = $this->stages->create($tournamentId, [
-            'name'        => $name,
-            'type'        => $type,
-            'position'    => max(1, $position),
-            'legs'        => $legs,
-            'tiebreakers' => StageValidator::normalizeTiebreakers($body['tiebreakers'] ?? null),
-            'status'      => 'pending',
+            'name'         => $name,
+            'type'         => $type,
+            'position'     => max(1, $position),
+            'legs'         => $legs,
+            'bracket_size' => $bracketSize,
+            'tiebreakers'  => StageValidator::normalizeTiebreakers($body['tiebreakers'] ?? null),
+            'status'       => 'pending',
         ]);
 
         return $this->responder->created($this->response, $stage);
