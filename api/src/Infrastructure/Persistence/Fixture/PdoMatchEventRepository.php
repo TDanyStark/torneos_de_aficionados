@@ -40,6 +40,50 @@ final class PdoMatchEventRepository implements MatchEventRepository
     }
 
     /**
+     * Events of a match enriched with player + team names for the public live
+     * timeline. LEFT JOINs so marker events (no player/team) still appear.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findByMatchWithNames(int $matchId): array
+    {
+        $sql = 'SELECT
+                    me.id               AS id,
+                    me.match_id         AS match_id,
+                    me.match_period_id  AS match_period_id,
+                    me.type             AS type,
+                    me.team_id          AS team_id,
+                    tt.name             AS team_name,
+                    me.player_id        AS player_id,
+                    p.full_name         AS player_name,
+                    me.minute           AS minute,
+                    me.created_at       AS created_at
+                FROM match_events me
+                LEFT JOIN tournament_teams tt ON tt.id = me.team_id
+                LEFT JOIN players p ON p.id = me.player_id
+                WHERE me.match_id = :match_id
+                ORDER BY me.id ASC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['match_id' => $matchId]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'id'              => (int) $row['id'],
+                'match_id'        => (int) $row['match_id'],
+                'match_period_id' => $row['match_period_id'] !== null ? (int) $row['match_period_id'] : null,
+                'type'            => (string) $row['type'],
+                'team_id'         => $row['team_id'] !== null ? (int) $row['team_id'] : null,
+                'team_name'       => $row['team_name'] !== null ? (string) $row['team_name'] : null,
+                'player_id'       => $row['player_id'] !== null ? (int) $row['player_id'] : null,
+                'player_name'     => $row['player_name'] !== null ? (string) $row['player_name'] : null,
+                'minute'          => $row['minute'] !== null ? (int) $row['minute'] : null,
+                'created_at'      => $row['created_at'] !== null ? (string) $row['created_at'] : null,
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
      * @param array<string,mixed> $data
      */
     public function create(array $data): MatchEvent

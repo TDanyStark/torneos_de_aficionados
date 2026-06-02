@@ -16,6 +16,14 @@ use App\Application\Actions\Fixture\ListRoundsAction;
 use App\Application\Actions\Fixture\RegenerateFixturesAction;
 use App\Application\Actions\Fixture\UpdateMatchAction;
 use App\Application\Actions\Group\CreateGroupAction;
+use App\Application\Actions\Live\CardsAction;
+use App\Application\Actions\Live\DeleteEventAction;
+use App\Application\Actions\Live\EndPeriodAction;
+use App\Application\Actions\Live\FinishMatchAction;
+use App\Application\Actions\Live\LiveMatchAction;
+use App\Application\Actions\Live\RecordEventAction;
+use App\Application\Actions\Live\StartPeriodAction;
+use App\Application\Actions\Live\TopScorersAction;
 use App\Application\Actions\Group\DeleteGroupAction;
 use App\Application\Actions\Group\ListGroupsAction;
 use App\Application\Actions\Group\UpdateGroupAction;
@@ -142,6 +150,10 @@ return function (App $app) {
             $tournaments->get('/{id}/registrations', ListRegistrationsAction::class)
                 ->add($roleGuard->require('organizer'))
                 ->add(JwtAuthMiddleware::class);
+
+            // Statistics (public). Derived from match_events. Paginated.
+            $tournaments->get('/{id}/top-scorers', TopScorersAction::class);
+            $tournaments->get('/{id}/cards', CardsAction::class);
         });
 
         // Tournament role removal. {id} is the role id -> authorized inside action.
@@ -238,9 +250,31 @@ return function (App $app) {
         });
 
         // Matches module ({id} is the match id -> tournament resolved +
-        // authorized inside the action). Metadata-only edits (Fase 4).
+        // authorized inside the action). Metadata edits (Fase 4) + live control
+        // (Fase 5). Referee endpoints are guarded by JwtAuthMiddleware (route) +
+        // MatchRefereeAuthorizer (inline). The live read model is public.
         $group->group('/matches', function (Group $matches) {
             $matches->put('/{id}', UpdateMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Live control (referee).
+            $matches->post('/{id}/periods/start', StartPeriodAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $matches->post('/{id}/periods/end', EndPeriodAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $matches->post('/{id}/events', RecordEventAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $matches->post('/{id}/finish', FinishMatchAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Public live read model (polling).
+            $matches->get('/{id}/live', LiveMatchAction::class);
+        });
+
+        // Match events module ({id} is the event id -> match resolved +
+        // referee-authorized inside the action). Correction (delete) only.
+        $group->group('/match-events', function (Group $matchEvents) {
+            $matchEvents->delete('/{id}', DeleteEventAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
     });

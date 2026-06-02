@@ -20,6 +20,18 @@ interface MatchEventRepository
     public function findByMatch(int $matchId): array;
 
     /**
+     * All events of a match enriched with player_name (players.full_name) and
+     * team_name (tournament_teams.name) for the public live timeline, ordered by
+     * id ASC. Marker events (period_start/period_end) have null names.
+     *
+     * Row shape (snake_case): id, match_id, match_period_id, type, team_id,
+     * team_name, player_id, player_name, minute, created_at.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findByMatchWithNames(int $matchId): array;
+
+    /**
      * @param array<string,mixed> $data match_id, type, plus optional
      *                                  match_period_id, team_id, player_id,
      *                                  minute, created_by_user_id
