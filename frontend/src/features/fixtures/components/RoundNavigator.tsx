@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Round } from '../types'
 
 interface RoundNavigatorProps {
   /** Distinct, ascending round numbers available in the current scope. */

@@ -1,5 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Users } from 'lucide-react'
+import {
+  ArrowLeft,
+  Calendar,
+  CalendarDays,
+  GitBranch,
+  ListOrdered,
+  Users,
+} from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -76,12 +83,32 @@ export function TournamentDetailPage() {
             </div>
           </dl>
 
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/tournaments/${data.slug}/teams`}>
-              <Users className="size-4" />
-              Ver equipos
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/teams`}>
+                <Users className="size-4" />
+                Equipos
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/fixtures`}>
+                <CalendarDays className="size-4" />
+                Calendario
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/standings`}>
+                <ListOrdered className="size-4" />
+                Posiciones
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/tournaments/${data.slug}/bracket`}>
+                <GitBranch className="size-4" />
+                Cuadro
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

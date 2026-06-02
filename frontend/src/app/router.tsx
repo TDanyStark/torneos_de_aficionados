@@ -69,6 +69,10 @@ export const router = createBrowserRouter([
             path: '/tournaments/:id/registrations',
             element: <RegistrationsInboxPage />,
           },
+          {
+            path: '/tournaments/:id/fixtures',
+            element: <StageFixturesPage />,
+          },
           { path: '/players/:id/history', element: <PlayerHistoryPage /> },
         ],
       },
