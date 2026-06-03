@@ -7,9 +7,10 @@ use Phinx\Seed\AbstractSeed;
 /**
  * Demo data: "Liga España" — a Fútbol 5 tournament owned by the demo organizer
  * (organizador@torneos.test), with 19 La Liga teams (Real Madrid intentionally
- * left out so it can be registered as a delegate) and 10 starting players
- * (titulares) per team. All teams are created by the organizer (the organizer
- * is each team's delegate_user_id) and approved.
+ * left out so it can be registered as a delegate) and the 10 most-used real
+ * starters (titulares, 2024-25 squads) per team, mapped to Fútbol 5 positions.
+ * All teams are created by the organizer (the organizer is each team's
+ * delegate_user_id) and approved.
  *
  * Replaces the ad-hoc PowerShell bootstrap script: running `composer db:seed`
  * (or db:fresh) now repopulates this dataset. Idempotent — if a "Liga España"
@@ -87,46 +88,241 @@ final class LigaEspanaSeeder extends AbstractSeed
         $this->insertRole($tournamentId, $organizerId, 'organizer', null, $now);
 
         // ---- Teams (19 — Real Madrid intentionally excluded) ----
+        // Each team carries its 10 most-used starters (real squads, 2024-25
+        // season). Positions are mapped to Fútbol 5 roles based on each player's
+        // natural position: GK -> Portero, defenders -> Cierre, full-backs/wingers
+        // -> Ala Derecha/Izquierda, forwards/strikers -> Pívot. Shirt numbers run
+        // 1..10 in roster order; the player at index 0 wears #1 and is captain.
+        // Format: [name, short, coach, [ [playerName, futsalPosition], ... x10 ]]
         $teams = [
-            ['FC Barcelona', 'BAR', 'Hansi Flick'],
-            ['Atlético de Madrid', 'ATM', 'Diego Simeone'],
-            ['Athletic Club', 'ATH', 'Ernesto Valverde'],
-            ['Real Sociedad', 'RSO', 'Imanol Alguacil'],
-            ['Real Betis', 'BET', 'Manuel Pellegrini'],
-            ['Villarreal CF', 'VIL', 'Marcelino García'],
-            ['Valencia CF', 'VAL', 'Rubén Baraja'],
-            ['Sevilla FC', 'SEV', 'García Pimienta'],
-            ['Girona FC', 'GIR', 'Míchel Sánchez'],
-            ['CA Osasuna', 'OSA', 'Vicente Moreno'],
-            ['Celta de Vigo', 'CEL', 'Claudio Giráldez'],
-            ['RCD Mallorca', 'MLL', 'Jagoba Arrasate'],
-            ['Rayo Vallecano', 'RAY', 'Iñigo Pérez'],
-            ['RCD Espanyol', 'ESP', 'Manolo González'],
-            ['Getafe CF', 'GET', 'José Bordalás'],
-            ['Deportivo Alavés', 'ALA', 'Eduardo Coudet'],
-            ['UD Las Palmas', 'LPA', 'Diego Martínez'],
-            ['CD Leganés', 'LEG', 'Borja Jiménez'],
-            ['Real Valladolid', 'VLL', 'Diego Cocca'],
-        ];
-
-        // Player name pools + Fútbol 5 positions (10-man roster: 5 titulares +
-        // 5 from the bench, mirroring the line-up the organizer pre-loaded).
-        $nombres = [
-            'Adrián', 'Alejandro', 'Álvaro', 'Andrés', 'Antonio', 'Carlos', 'Daniel',
-            'David', 'Diego', 'Eduardo', 'Fernando', 'Francisco', 'Gonzalo', 'Hugo',
-            'Iker', 'Javier', 'Jorge', 'José', 'Juan', 'Luis', 'Manuel', 'Marcos',
-            'Mario', 'Miguel', 'Nicolás', 'Óscar', 'Pablo', 'Pedro', 'Rafael', 'Raúl',
-        ];
-        $apellidos = [
-            'García', 'Martínez', 'López', 'Sánchez', 'Pérez', 'González', 'Rodríguez',
-            'Fernández', 'Gómez', 'Díaz', 'Moreno', 'Muñoz', 'Álvarez', 'Romero',
-            'Torres', 'Navarro', 'Ramírez', 'Gil', 'Serrano', 'Blanco', 'Suárez',
-            'Castro', 'Ortega', 'Rubio', 'Marín', 'Sanz', 'Iglesias', 'Medina',
-            'Cortés', 'Garrido',
-        ];
-        $posiciones = [
-            'Portero', 'Cierre', 'Ala Derecha', 'Ala Izquierda', 'Pívot',
-            'Portero', 'Cierre', 'Ala Derecha', 'Ala Izquierda', 'Pívot',
+            ['FC Barcelona', 'BAR', 'Hansi Flick', [
+                ['Marc-André ter Stegen', 'Portero'],
+                ['Jules Koundé', 'Cierre'],
+                ['Pau Cubarsí', 'Cierre'],
+                ['Íñigo Martínez', 'Cierre'],
+                ['Alejandro Balde', 'Ala Izquierda'],
+                ['Pedri González', 'Ala Derecha'],
+                ['Frenkie de Jong', 'Cierre'],
+                ['Lamine Yamal', 'Ala Derecha'],
+                ['Raphinha', 'Ala Izquierda'],
+                ['Robert Lewandowski', 'Pívot'],
+            ]],
+            ['Atlético de Madrid', 'ATM', 'Diego Simeone', [
+                ['Jan Oblak', 'Portero'],
+                ['José María Giménez', 'Cierre'],
+                ['Robin Le Normand', 'Cierre'],
+                ['Nahuel Molina', 'Ala Derecha'],
+                ['Reinildo Mandava', 'Ala Izquierda'],
+                ['Rodrigo De Paul', 'Ala Derecha'],
+                ['Pablo Barrios', 'Cierre'],
+                ['Marcos Llorente', 'Ala Derecha'],
+                ['Antoine Griezmann', 'Pívot'],
+                ['Julián Álvarez', 'Pívot'],
+            ]],
+            ['Athletic Club', 'ATH', 'Ernesto Valverde', [
+                ['Unai Simón', 'Portero'],
+                ['Dani Vivian', 'Cierre'],
+                ['Aitor Paredes', 'Cierre'],
+                ['Óscar de Marcos', 'Ala Derecha'],
+                ['Yuri Berchiche', 'Ala Izquierda'],
+                ['Mikel Vesga', 'Cierre'],
+                ['Oihan Sancet', 'Ala Derecha'],
+                ['Iñaki Williams', 'Ala Derecha'],
+                ['Nico Williams', 'Ala Izquierda'],
+                ['Gorka Guruzeta', 'Pívot'],
+            ]],
+            ['Real Sociedad', 'RSO', 'Imanol Alguacil', [
+                ['Álex Remiro', 'Portero'],
+                ['Aritz Elustondo', 'Cierre'],
+                ['Igor Zubeldia', 'Cierre'],
+                ['Hamari Traoré', 'Ala Derecha'],
+                ['Aihen Muñoz', 'Ala Izquierda'],
+                ['Martín Zubimendi', 'Cierre'],
+                ['Brais Méndez', 'Ala Derecha'],
+                ['Mikel Oyarzabal', 'Pívot'],
+                ['Takefusa Kubo', 'Ala Derecha'],
+                ['Sheraldo Becker', 'Pívot'],
+            ]],
+            ['Real Betis', 'BET', 'Manuel Pellegrini', [
+                ['Rui Silva', 'Portero'],
+                ['Héctor Bellerín', 'Ala Derecha'],
+                ['Marc Bartra', 'Cierre'],
+                ['Diego Llorente', 'Cierre'],
+                ['Romain Perraud', 'Ala Izquierda'],
+                ['Johnny Cardoso', 'Cierre'],
+                ['Isco Alarcón', 'Ala Derecha'],
+                ['Giovani Lo Celso', 'Ala Izquierda'],
+                ['Vitor Roque', 'Pívot'],
+                ['Cucho Hernández', 'Pívot'],
+            ]],
+            ['Villarreal CF', 'VIL', 'Marcelino García', [
+                ['Diego Conde', 'Portero'],
+                ['Juan Foyth', 'Cierre'],
+                ['Logan Costa', 'Cierre'],
+                ['Kiko Femenía', 'Ala Derecha'],
+                ['Sergi Cardona', 'Ala Izquierda'],
+                ['Dani Parejo', 'Cierre'],
+                ['Santi Comesaña', 'Ala Derecha'],
+                ['Yeremy Pino', 'Ala Derecha'],
+                ['Álex Baena', 'Ala Izquierda'],
+                ['Ayoze Pérez', 'Pívot'],
+            ]],
+            ['Valencia CF', 'VAL', 'Rubén Baraja', [
+                ['Giorgi Mamardashvili', 'Portero'],
+                ['Thierry Correia', 'Ala Derecha'],
+                ['Cristhian Mosquera', 'Cierre'],
+                ['César Tárrega', 'Cierre'],
+                ['José Gayà', 'Ala Izquierda'],
+                ['Pepelu', 'Cierre'],
+                ['Javi Guerra', 'Ala Derecha'],
+                ['Diego López', 'Ala Izquierda'],
+                ['Luis Rioja', 'Ala Derecha'],
+                ['Hugo Duro', 'Pívot'],
+            ]],
+            ['Sevilla FC', 'SEV', 'García Pimienta', [
+                ['Ørjan Nyland', 'Portero'],
+                ['Juanlu Sánchez', 'Ala Derecha'],
+                ['Loïc Badé', 'Cierre'],
+                ['Kike Salas', 'Cierre'],
+                ['Adrià Pedrosa', 'Ala Izquierda'],
+                ['Nemanja Gudelj', 'Cierre'],
+                ['Saúl Ñíguez', 'Ala Derecha'],
+                ['Lucas Ocampos', 'Ala Izquierda'],
+                ['Dodi Lukébakio', 'Ala Derecha'],
+                ['Isaac Romero', 'Pívot'],
+            ]],
+            ['Girona FC', 'GIR', 'Míchel Sánchez', [
+                ['Paulo Gazzaniga', 'Portero'],
+                ['Arnau Martínez', 'Ala Derecha'],
+                ['Daley Blind', 'Cierre'],
+                ['David López', 'Cierre'],
+                ['Miguel Gutiérrez', 'Ala Izquierda'],
+                ['Yangel Herrera', 'Cierre'],
+                ['Iván Martín', 'Ala Derecha'],
+                ['Viktor Tsygankov', 'Ala Derecha'],
+                ['Bryan Gil', 'Ala Izquierda'],
+                ['Abel Ruiz', 'Pívot'],
+            ]],
+            ['CA Osasuna', 'OSA', 'Vicente Moreno', [
+                ['Sergio Herrera', 'Portero'],
+                ['Jesús Areso', 'Ala Derecha'],
+                ['Alejandro Catena', 'Cierre'],
+                ['Enzo Boyomo', 'Cierre'],
+                ['Bryan Zaragoza', 'Ala Izquierda'],
+                ['Lucas Torró', 'Cierre'],
+                ['Moi Gómez', 'Ala Derecha'],
+                ['Aimar Oroz', 'Ala Derecha'],
+                ['Rubén García', 'Ala Izquierda'],
+                ['Ante Budimir', 'Pívot'],
+            ]],
+            ['Celta de Vigo', 'CEL', 'Claudio Giráldez', [
+                ['Vicente Guaita', 'Portero'],
+                ['Óscar Mingueza', 'Ala Derecha'],
+                ['Carl Starfelt', 'Cierre'],
+                ['Marcos Alonso', 'Cierre'],
+                ['Carlos Domínguez', 'Cierre'],
+                ['Ilaix Moriba', 'Ala Derecha'],
+                ['Fran Beltrán', 'Cierre'],
+                ['Hugo Álvarez', 'Ala Izquierda'],
+                ['Borja Iglesias', 'Pívot'],
+                ['Iago Aspas', 'Pívot'],
+            ]],
+            ['RCD Mallorca', 'MLL', 'Jagoba Arrasate', [
+                ['Dominik Greif', 'Portero'],
+                ['Pablo Maffeo', 'Ala Derecha'],
+                ['Martin Valjent', 'Cierre'],
+                ['Antonio Raíllo', 'Cierre'],
+                ['Johan Mojica', 'Ala Izquierda'],
+                ['Samú Costa', 'Cierre'],
+                ['Sergi Darder', 'Ala Derecha'],
+                ['Dani Rodríguez', 'Ala Izquierda'],
+                ['Vedat Muriqi', 'Pívot'],
+                ['Cyle Larin', 'Pívot'],
+            ]],
+            ['Rayo Vallecano', 'RAY', 'Iñigo Pérez', [
+                ['Augusto Batalla', 'Portero'],
+                ['Andrei Ratiu', 'Ala Derecha'],
+                ['Florian Lejeune', 'Cierre'],
+                ['Aridane Hernández', 'Cierre'],
+                ['Pep Chavarría', 'Ala Izquierda'],
+                ['Óscar Valentín', 'Cierre'],
+                ['Pathé Ciss', 'Ala Derecha'],
+                ['Isi Palazón', 'Ala Derecha'],
+                ['Álvaro García', 'Ala Izquierda'],
+                ['Jorge de Frutos', 'Pívot'],
+            ]],
+            ['RCD Espanyol', 'ESP', 'Manolo González', [
+                ['Joan García', 'Portero'],
+                ['Omar El Hilali', 'Ala Derecha'],
+                ['Leandro Cabrera', 'Cierre'],
+                ['Sergi Gómez', 'Cierre'],
+                ['Carlos Romero', 'Ala Izquierda'],
+                ['Pol Lozano', 'Cierre'],
+                ['Edu Expósito', 'Ala Derecha'],
+                ['Javi Puado', 'Ala Derecha'],
+                ['Jofre Carreras', 'Ala Izquierda'],
+                ['Roberto Fernández', 'Pívot'],
+            ]],
+            ['Getafe CF', 'GET', 'José Bordalás', [
+                ['David Soria', 'Portero'],
+                ['Damián Suárez', 'Ala Derecha'],
+                ['Domingos Duarte', 'Cierre'],
+                ['Omar Alderete', 'Cierre'],
+                ['Diego Rico', 'Ala Izquierda'],
+                ['Luis Milla', 'Cierre'],
+                ['Christantus Uche', 'Ala Derecha'],
+                ['Carles Pérez', 'Ala Derecha'],
+                ['Yellu Santiago', 'Ala Izquierda'],
+                ['Borja Mayoral', 'Pívot'],
+            ]],
+            ['Deportivo Alavés', 'ALA', 'Eduardo Coudet', [
+                ['Antonio Sivera', 'Portero'],
+                ['Nahuel Tenaglia', 'Ala Derecha'],
+                ['Facundo Garcés', 'Cierre'],
+                ['Abdel Abqar', 'Cierre'],
+                ['Manu Sánchez', 'Ala Izquierda'],
+                ['Antonio Blanco', 'Cierre'],
+                ['Ander Guevara', 'Ala Derecha'],
+                ['Carlos Vicente', 'Ala Derecha'],
+                ['Carles Aleñá', 'Ala Izquierda'],
+                ['Kike García', 'Pívot'],
+            ]],
+            ['UD Las Palmas', 'LPA', 'Diego Martínez', [
+                ['Jasper Cillessen', 'Portero'],
+                ['Álex Suárez', 'Cierre'],
+                ['Scott McKenna', 'Cierre'],
+                ['Sergi Cardona', 'Ala Izquierda'],
+                ['Kirian Rodríguez', 'Cierre'],
+                ['Javi Muñoz', 'Ala Derecha'],
+                ['Alberto Moleiro', 'Ala Derecha'],
+                ['Sandro Ramírez', 'Pívot'],
+                ['Fábio Silva', 'Pívot'],
+                ['Marc Cardona', 'Pívot'],
+            ]],
+            ['CD Leganés', 'LEG', 'Borja Jiménez', [
+                ['Marko Dmitrović', 'Portero'],
+                ['Adrià Altimira', 'Ala Derecha'],
+                ['Jorge Sáenz', 'Cierre'],
+                ['Sergio González', 'Cierre'],
+                ['Valentín Rosier', 'Ala Izquierda'],
+                ['Yvan Neyou', 'Cierre'],
+                ['Darko Brašanac', 'Ala Derecha'],
+                ['Óscar Rodríguez', 'Ala Izquierda'],
+                ['Juan Cruz', 'Ala Derecha'],
+                ['Miguel de la Fuente', 'Pívot'],
+            ]],
+            ['Real Valladolid', 'VLL', 'Diego Cocca', [
+                ['Karl Hein', 'Portero'],
+                ['Iván Fresneda', 'Ala Derecha'],
+                ['Javi Sánchez', 'Cierre'],
+                ['Eray Cömert', 'Cierre'],
+                ['David Torres', 'Ala Izquierda'],
+                ['Kike Pérez', 'Cierre'],
+                ['Mario Martín', 'Ala Derecha'],
+                ['Stanko Jurić', 'Ala Derecha'],
+                ['Raúl Moro', 'Ala Izquierda'],
+                ['Marcos André', 'Pívot'],
+            ]],
         ];
 
         $insertTeam = $pdo->prepare(
@@ -151,7 +347,7 @@ final class LigaEspanaSeeder extends AbstractSeed
         );
 
         $docCounter = 100000;
-        foreach ($teams as $index => [$name, $short, $coach]) {
+        foreach ($teams as [$name, $short, $coach, $roster]) {
             $insertTeam->execute([
                 ':tid'      => $tournamentId,
                 ':name'     => $name,
@@ -172,16 +368,15 @@ final class LigaEspanaSeeder extends AbstractSeed
                 ':now'     => $now,
             ]);
 
-            // 10 starting players, shirts 1..10, captain wears #1.
-            for ($i = 1; $i <= 10; $i++) {
+            // 10 real starting players, shirts 1..10, captain wears #1.
+            foreach ($roster as $slot => [$playerName, $position]) {
                 $docCounter++;
-                $nombre = $nombres[($index * 7 + $i) % count($nombres)];
-                $apellido = $apellidos[($index * 5 + $i) % count($apellidos)];
+                $shirt = $slot + 1;
 
                 $insertPlayer->execute([
                     ':org'  => $organizerId,
                     ':doc'  => 'ESP' . $docCounter,
-                    ':name' => $nombre . ' ' . $apellido,
+                    ':name' => $playerName,
                     ':now'  => $now,
                 ]);
                 $playerId = (int) $pdo->lastInsertId();
@@ -189,9 +384,9 @@ final class LigaEspanaSeeder extends AbstractSeed
                 $insertTeamPlayer->execute([
                     ':ttid'     => $teamId,
                     ':pid'      => $playerId,
-                    ':shirt'    => $i,
-                    ':position' => $posiciones[$i - 1],
-                    ':captain'  => $i === 1 ? 1 : 0,
+                    ':shirt'    => $shirt,
+                    ':position' => $position,
+                    ':captain'  => $shirt === 1 ? 1 : 0,
                     ':status'   => 'active',
                     ':now'      => $now,
                 ]);

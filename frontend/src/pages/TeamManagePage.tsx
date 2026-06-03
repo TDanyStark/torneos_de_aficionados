@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,7 @@ import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
 
 export function TeamManagePage() {
   const { slug, teamId } = useParams<{ slug: string; teamId: string }>()
+  const navigate = useNavigate()
   // Public detail (by slug): resolves the id + roster_limit. Works for both
   // organizers and the owner delegate; per-action authorization is enforced by
   // the team/roster endpoints. Avoids the owner-only `by-slug` admin endpoint.
@@ -35,12 +36,22 @@ export function TeamManagePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to={`/t/${tournament.data.slug}`}>
+      <div className="-ml-2 flex items-center gap-1">
+        {/* Atrás: vuelve a la pantalla anterior (p. ej. la edición con su
+            ?section=inscripciones intacto). Volver al torneo: destino fijo. */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft className="size-4" />
-          Volver al torneo
-        </Link>
-      </Button>
+          Atrás
+        </Button>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={`/t/${tournament.data.slug}`}>Volver al torneo</Link>
+        </Button>
+      </div>
       <div>
         <h1 className="text-xl font-semibold">Gestión de equipo</h1>
         <p className="text-muted-foreground text-sm">

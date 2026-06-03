@@ -59,6 +59,20 @@ export const DEFAULT_ADD_PLAYER_FORM: AddPlayerFormValues = {
   is_delegate: false,
 }
 
+/**
+ * Per-player roster edit form (organizer/delegate). Only roster fields the
+ * backend `PUT /team-players/{id}` accepts are editable here; the player's core
+ * identity (name, cédula) is read-only because no backend endpoint mutates it.
+ */
+export const editTeamPlayerSchema = z.object({
+  shirt_number: optionalPositiveIntString,
+  position: z.string().max(40, 'Máximo 40 caracteres').optional().or(z.literal('')),
+  is_captain: z.boolean(),
+  is_delegate: z.boolean(),
+})
+
+export type EditTeamPlayerFormValues = z.infer<typeof editTeamPlayerSchema>
+
 /** A single roster player inside the self-registration form. */
 export const selfRegistrationPlayerSchema = z.object({
   document_id: z.string().min(3, 'La cédula es obligatoria'),

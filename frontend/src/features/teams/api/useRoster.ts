@@ -29,6 +29,20 @@ export function useRoster(teamId: number | undefined) {
   })
 }
 
+/**
+ * Single roster entry, resolved from the roster list (the backend exposes no
+ * single-player GET). Reuses the cached list so navigating from the roster to
+ * the per-player edit page is instant.
+ */
+export function useTeamPlayer(
+  teamId: number | undefined,
+  teamPlayerId: number,
+) {
+  const roster = useRoster(teamId)
+  const player = roster.data?.find((p) => p.id === teamPlayerId) ?? null
+  return { ...roster, player }
+}
+
 /** Adds a player to the roster (reuses by cédula or creates a new player). */
 export function useAddPlayer(teamId: number) {
   const qc = useQueryClient()

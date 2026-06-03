@@ -25,10 +25,7 @@ import {
   useTeamDeletionImpact,
   useDeleteTeam,
 } from '../api/useTeams'
-import {
-  useRoster,
-  useDeleteTeamPlayer,
-} from '../api/useRoster'
+import { useRoster } from '../api/useRoster'
 import { TeamEditForm } from './TeamEditForm'
 import { RosterTable } from './RosterTable'
 import { AddPlayerForm } from './AddPlayerForm'
@@ -55,9 +52,7 @@ export function TeamManager({
   const navigate = useNavigate()
   const teamQuery = useTeam(tournamentId, teamId)
   const roster = useRoster(teamId)
-  const deleteTeamPlayer = useDeleteTeamPlayer(teamId)
   const deleteTeam = useDeleteTeam()
-  const [removingId, setRemovingId] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const deletionImpact = useTeamDeletionImpact(teamId, confirmDeleteOpen)
@@ -76,18 +71,6 @@ export function TeamManager({
 
   const currentCount = roster.data?.length ?? 0
   const isRosterFull = rosterLimit != null && currentCount >= rosterLimit
-
-  const onRemovePlayer = async (teamPlayerId: number) => {
-    setRemovingId(teamPlayerId)
-    try {
-      await deleteTeamPlayer.mutateAsync(teamPlayerId)
-      toast.success('Jugador retirado de la plantilla')
-    } catch {
-      toast.error('No se pudo retirar el jugador')
-    } finally {
-      setRemovingId(null)
-    }
-  }
 
   const onDeleteTeam = async () => {
     try {
@@ -183,11 +166,9 @@ export function TeamManager({
             <RosterTable
               players={roster.data ?? []}
               teamId={teamId}
+              tournamentSlug={tournamentSlug}
               canModerate={isOrganizer}
               canEdit={canEdit}
-              canViewHistory={isOrganizer}
-              onRemove={canEdit ? onRemovePlayer : undefined}
-              removingId={removingId}
             />
           )}
         </CardContent>

@@ -17,6 +17,7 @@ import { TournamentEditPage } from '@/pages/TournamentEditPage'
 import { TournamentRolesPage } from '@/pages/TournamentRolesPage'
 import { TeamDetailPage } from '@/pages/TeamDetailPage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
+import { PlayerEditPage } from '@/pages/PlayerEditPage'
 import { MyRegistrationsPage } from '@/pages/MyRegistrationsPage'
 import { FollowedTournamentsPage } from '@/pages/FollowedTournamentsPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
@@ -82,6 +83,10 @@ export const router = createBrowserRouter([
           {
             path: '/t/:slug/teams/:teamId/manage',
             element: <TeamManagePage />,
+          },
+          {
+            path: '/t/:slug/teams/:teamId/players/:teamPlayerId/edit',
+            element: <PlayerEditPage />,
           },
           {
             path: '/t/:slug/registrations',
