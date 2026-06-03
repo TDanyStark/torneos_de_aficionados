@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Copy, Pencil } from 'lucide-react'
+import { Eye, Pencil, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Card,
@@ -52,14 +52,20 @@ export function OrganizerTournamentCard({
       </CardContent>
       <CardFooter className="flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
+          <Link to={`/t/${tournament.slug}`}>
+            <Eye className="size-4" />
+            Ver torneo
+          </Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
           <Link to={`/t/${tournament.slug}/edit`}>
             <Pencil className="size-4" />
             Editar
           </Link>
         </Button>
         <Button variant="outline" size="sm" onClick={copyShareLink}>
-          <Copy className="size-4" />
-          Copiar enlace
+          <Share2 className="size-4" />
+          Compartir
         </Button>
       </CardFooter>
     </Card>
