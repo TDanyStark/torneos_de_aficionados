@@ -12,23 +12,16 @@ interface LegacyTournamentRedirectProps {
  * `replace` so the legacy URL is not kept in history.
  *
  * Defense-in-depth: the public hub resolves tournaments by SLUG only, so a
- * purely-numeric param is an organizer id that leaked into a public-shaped URL
- * (e.g. an authed link shadowed by this legacy route). In that case redirect to
- * the organizer fixtures management page instead of producing a slug 404.
+ * purely-numeric param is an organizer id that leaked into a public-shaped URL.
+ * Management is now slug-based (`/t/:slug/*`) and we can't build a slug from an
+ * id here, so forward those stragglers to the dashboard instead of 404-ing.
  */
 export function LegacyTournamentRedirect({
   tab,
 }: LegacyTournamentRedirectProps) {
   const { slug } = useParams<{ slug: string }>()
   if (slug && /^\d+$/.test(slug)) {
-    // A numeric param is an organizer id that leaked into a public-shaped URL.
-    // Editing is now addressed by slug (`/t/:slug/edit`), which we can't build
-    // from an id here, so forward to the by-id team management page instead.
-    const target =
-      tab === 'fixtures'
-        ? `/tournaments/${slug}/fixtures`
-        : `/tournaments/${slug}/teams`
-    return <Navigate to={target} replace />
+    return <Navigate to="/dashboard" replace />
   }
   const query = tab && tab !== 'resumen' ? `?tab=${tab}` : ''
   return <Navigate to={`/t/${slug}${query}`} replace />

@@ -61,37 +61,35 @@ export const router = createBrowserRouter([
       // hub tab); the hub's Fixtures/Tabla cover league play.
       { path: '/tournaments/:slug/bracket', element: <BracketPage /> },
 
-      // Authed organizer/delegate routes (by tournament id). Declared BEFORE the
-      // legacy public `/tournaments/:slug/*` redirects so a numeric path like
-      // `/tournaments/32/fixtures` resolves to the management page instead of
-      // being shadowed by the same-shape legacy slug redirect (which would
-      // forward to the slug-only public hub and 404).
+      // Authed organizer/delegate routes. Management is slug-based under the
+      // canonical `/t/:slug/*` hub; only `:id/roles` remains addressed by the
+      // numeric id (admin tooling, not linked from the public hub).
       {
         element: <ProtectedRoute />,
         children: [
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/mis-inscripciones', element: <MyRegistrationsPage /> },
           { path: '/tournaments/new', element: <TournamentWizardPage /> },
-          { path: '/t/:slug/edit', element: <TournamentEditPage /> },
           { path: '/tournaments/:id/roles', element: <TournamentRolesPage /> },
 
-          // Organizer/delegate team & registration management (by tournament id).
-          // The teams list must precede the legacy `/tournaments/:slug/teams`
-          // redirect so a numeric id resolves to this management page.
+          // Organizer/delegate management lives under the canonical slug hub
+          // (`/t/:slug/*`). These resolve the slug to the numeric id the nested
+          // management APIs require via the authed `by-slug` endpoint.
+          { path: '/t/:slug/edit', element: <TournamentEditPage /> },
           {
-            path: '/tournaments/:id/teams',
+            path: '/t/:slug/teams',
             element: <TournamentTeamsPage />,
           },
           {
-            path: '/tournaments/:id/teams/:teamId/manage',
+            path: '/t/:slug/teams/:teamId/manage',
             element: <TeamManagePage />,
           },
           {
-            path: '/tournaments/:id/registrations',
+            path: '/t/:slug/registrations',
             element: <RegistrationsInboxPage />,
           },
           {
-            path: '/tournaments/:id/fixtures',
+            path: '/t/:slug/fixtures',
             element: <StageFixturesPage />,
           },
           { path: '/players/:id/history', element: <PlayerHistoryPage /> },

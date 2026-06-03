@@ -18,6 +18,8 @@ export const tournamentKeys = {
   list: (filters: TournamentFilters) =>
     ['tournaments', 'list', filters] as const,
   detail: (slug: string) => ['tournaments', 'detail', slug] as const,
+  manageBySlug: (slug: string) =>
+    ['tournaments', 'by-slug', slug] as const,
 }
 
 /** Public, paginated tournament list with URL-driven filters. */
@@ -46,6 +48,25 @@ export function useTournamentDetail(slug: string | undefined) {
     enabled: Boolean(slug),
     queryFn: ({ signal }) =>
       apiClient.get<Tournament>(`/tournaments/${slug}`, undefined, signal),
+  })
+}
+
+/**
+ * Owner/admin tournament detail by slug for management views (edit, teams,
+ * registrations, fixtures). Hits the authed `by-slug` endpoint so management
+ * pages can be addressed by the canonical slug while still resolving the
+ * numeric id the nested management APIs require.
+ */
+export function useTournamentBySlug(slug: string | undefined) {
+  return useQuery({
+    queryKey: tournamentKeys.manageBySlug(slug ?? ''),
+    enabled: Boolean(slug),
+    queryFn: ({ signal }) =>
+      apiClient.get<Tournament>(
+        `/tournaments/by-slug/${slug}`,
+        undefined,
+        signal,
+      ),
   })
 }
 
