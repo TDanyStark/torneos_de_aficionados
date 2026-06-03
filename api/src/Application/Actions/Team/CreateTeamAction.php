@@ -67,13 +67,18 @@ final class CreateTeamAction extends ApiAction
             throw new ValidationException(['coach_name' => 'El nombre del entrenador no puede superar 120 caracteres.']);
         }
 
+        // Organizers (and admins) are never a team's delegate: teams they create
+        // stay delegate-less. A delegate creating a team becomes its delegate.
+        $isOrganizer = $this->userHasRole($user, $tournamentId, 'organizer');
+        $delegateUserId = ($user->isAdmin || $isOrganizer) ? null : $user->id;
+
         $team = $this->teams->create([
             'tournament_id'    => $tournamentId,
             'name'             => $name,
             'short_name'       => $shortName !== '' ? $shortName : null,
             'coach_name'       => $coachName !== '' ? $coachName : null,
             'logo_url'         => $logoUrl !== '' ? $logoUrl : null,
-            'delegate_user_id' => $user->id,
+            'delegate_user_id' => $delegateUserId,
             'status'           => 'pending',
         ]);
 
@@ -86,5 +91,16 @@ final class CreateTeamAction extends ApiAction
         ]);
 
         return $this->responder->created($this->response, $team);
+    }
+
+    private function userHasRole(User $user, int $tournamentId, string $role): bool
+    {
+        try {
+            $this->authorizer->assert($user, $tournamentId, [$role]);
+
+            return true;
+        } catch (ForbiddenException) {
+            return false;
+        }
     }
 }
