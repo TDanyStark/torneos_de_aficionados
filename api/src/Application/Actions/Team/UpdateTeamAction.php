@@ -65,7 +65,11 @@ final class UpdateTeamAction extends ApiAction
         }
         if (array_key_exists('short_name', $body)) {
             $shortName = trim((string) $body['short_name']);
-            $data['short_name'] = $shortName !== '' ? $shortName : null;
+            if ($shortName !== '' && mb_strlen($shortName) > 3) {
+                $errors['short_name'] = 'La abreviatura no puede superar 3 caracteres.';
+            } else {
+                $data['short_name'] = $shortName !== '' ? $shortName : null;
+            }
         }
         if (array_key_exists('coach_name', $body)) {
             $coachName = trim((string) $body['coach_name']);

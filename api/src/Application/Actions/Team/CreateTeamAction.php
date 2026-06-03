@@ -53,6 +53,9 @@ final class CreateTeamAction extends ApiAction
         if ($name === '') {
             throw new ValidationException(['name' => 'El nombre del equipo es obligatorio.']);
         }
+        if ($shortName !== null && $shortName !== '' && mb_strlen($shortName) > 3) {
+            throw new ValidationException(['short_name' => 'La abreviatura no puede superar 3 caracteres.']);
+        }
         if ($coachName !== null && mb_strlen($coachName) > 120) {
             throw new ValidationException(['coach_name' => 'El nombre del entrenador no puede superar 120 caracteres.']);
         }

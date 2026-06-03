@@ -124,7 +124,10 @@ final class PdoTeamPlayerRepository implements TeamPlayerRepository
      */
     public function update(int $id, array $data): TeamPlayer
     {
-        $allowed = ['shirt_number', 'position', 'is_captain', 'is_delegate', 'status'];
+        $allowed = [
+            'shirt_number', 'position', 'is_captain', 'is_delegate',
+            'status', 'rejection_reason', 'rejected_at',
+        ];
         $boolFields = ['is_captain', 'is_delegate'];
 
         $sets = [];
