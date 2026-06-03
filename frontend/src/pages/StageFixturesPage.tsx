@@ -55,7 +55,7 @@ export function StageFixturesPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to="/dashboard">
+        <Link to={`/t/${slug}?tab=fixtures`}>
           <ArrowLeft className="size-4" />
           Volver
         </Link>

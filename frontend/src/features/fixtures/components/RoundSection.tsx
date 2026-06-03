@@ -9,6 +9,8 @@ interface RoundSectionProps {
   nameOf: (teamId: number | null | undefined) => string
   /** Surface a referee entry-point on each match row. */
   showRefereeLink?: boolean
+  /** Organizer-only: request deletion of a match (opens a confirm dialog). */
+  onDeleteMatch?: (match: Match) => void
 }
 
 function formatRoundDate(value: string | null | undefined): string | null {
@@ -29,6 +31,7 @@ export function RoundSection({
   matches,
   nameOf,
   showRefereeLink,
+  onDeleteMatch,
 }: RoundSectionProps) {
   const title =
     round?.name?.trim() || `Jornada ${round?.number ?? fallbackNumber}`
@@ -51,6 +54,7 @@ export function RoundSection({
             match={m}
             nameOf={nameOf}
             showRefereeLink={showRefereeLink}
+            onDelete={onDeleteMatch}
           />
         ))}
       </div>

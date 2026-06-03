@@ -6,6 +6,7 @@ import { TournamentListPage } from '@/pages/TournamentListPage'
 import { TournamentPage } from '@/pages/TournamentPage'
 import {
   LegacyTeamRedirect,
+  LegacyTeamsAdminRedirect,
   LegacyTournamentRedirect,
 } from '@/components/layout/LegacyTournamentRedirect'
 import { LoginPage } from '@/pages/LoginPage'
@@ -16,8 +17,6 @@ import { TournamentEditPage } from '@/pages/TournamentEditPage'
 import { TournamentRolesPage } from '@/pages/TournamentRolesPage'
 import { TeamDetailPage } from '@/pages/TeamDetailPage'
 import { TeamManagePage } from '@/pages/TeamManagePage'
-import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
-import { TournamentTeamsPage } from '@/pages/TournamentTeamsPage'
 import { MyRegistrationsPage } from '@/pages/MyRegistrationsPage'
 import { FollowedTournamentsPage } from '@/pages/FollowedTournamentsPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
@@ -78,7 +77,7 @@ export const router = createBrowserRouter([
           { path: '/t/:slug/edit', element: <TournamentEditPage /> },
           {
             path: '/t/:slug/teams',
-            element: <TournamentTeamsPage />,
+            element: <LegacyTeamsAdminRedirect />,
           },
           {
             path: '/t/:slug/teams/:teamId/manage',
@@ -86,7 +85,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/t/:slug/registrations',
-            element: <RegistrationsInboxPage />,
+            element: <LegacyTeamsAdminRedirect />,
           },
           {
             path: '/t/:slug/fixtures',

@@ -14,7 +14,8 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
 import { useTeam } from '@/features/teams/api/useTeams'
 import { useRoster } from '@/features/teams/api/useRoster'
-import { RosterTable } from '@/features/teams/components/RosterTable'
+import { PlayerFifaCard } from '@/features/teams/components/PlayerFifaCard'
+import { EmptyState } from '@/components/shared/StateMessage'
 import { TeamStatusBadge } from '@/features/teams/components/TeamStatusBadge'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -107,11 +108,24 @@ export function TeamDetailPage() {
             </CardHeader>
             <CardContent>
               {roster.isLoading ? (
-                <Skeleton className="h-24 w-full" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-[3/4] w-full rounded-xl" />
+                  ))}
+                </div>
               ) : roster.isError ? (
                 <ErrorState message="No se pudo cargar la plantilla." />
+              ) : (roster.data ?? []).length === 0 ? (
+                <EmptyState
+                  title="Plantilla vacía"
+                  description="Aún no hay jugadores en este equipo."
+                />
               ) : (
-                <RosterTable players={roster.data ?? []} teamId={id} />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {(roster.data ?? []).map((player) => (
+                    <PlayerFifaCard key={player.id} player={player} />
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

@@ -35,3 +35,13 @@ export function LegacyTeamRedirect() {
   const { slug, teamId } = useParams<{ slug: string; teamId: string }>()
   return <Navigate to={`/t/${slug}/equipo/${teamId}`} replace />
 }
+
+/**
+ * Forwards the old organizer "Equipos" and "Inscripciones" pages
+ * (`/t/:slug/teams`, `/t/:slug/registrations`) to the unified teams section of
+ * the edit page (`/t/:slug/edit?section=equipos`).
+ */
+export function LegacyTeamsAdminRedirect() {
+  const { slug } = useParams<{ slug: string }>()
+  return <Navigate to={`/t/${slug}/edit?section=equipos`} replace />
+}

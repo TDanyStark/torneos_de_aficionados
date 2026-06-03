@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { CalendarClock, MapPin, Radio, Timer } from 'lucide-react'
+import { CalendarClock, MapPin, Radio, Timer, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Match } from '../types'
 import { MatchStatusBadge } from './MatchStatusBadge'
@@ -10,6 +10,8 @@ interface MatchRowProps {
   nameOf: (teamId: number | null | undefined) => string
   /** Show a referee entry-point button (organizer/referee context). */
   showRefereeLink?: boolean
+  /** Organizer-only: request deletion of this match (opens a confirm dialog). */
+  onDelete?: (match: Match) => void
 }
 
 function formatDate(value: string | null): string | null {
@@ -25,7 +27,12 @@ function formatDate(value: string | null): string | null {
 }
 
 /** A single match line: home vs away with score, status and metadata. */
-export function MatchRow({ match, nameOf, showRefereeLink }: MatchRowProps) {
+export function MatchRow({
+  match,
+  nameOf,
+  showRefereeLink,
+  onDelete,
+}: MatchRowProps) {
   const isFinished = match.status === 'finished'
   const date = formatDate(match.scheduled_at)
   const isLive = match.status === 'live' || match.status === 'paused'
@@ -76,6 +83,17 @@ export function MatchRow({ match, nameOf, showRefereeLink }: MatchRowProps) {
               <Timer className="size-3.5" />
               Dirigir
             </Link>
+          </Button>
+        ) : null}
+        {onDelete ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive size-7"
+            aria-label="Eliminar partido"
+            onClick={() => onDelete(match)}
+          >
+            <Trash2 className="size-4" />
           </Button>
         ) : null}
       </div>

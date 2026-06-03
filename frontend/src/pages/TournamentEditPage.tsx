@@ -121,12 +121,42 @@ const FIELD_LABEL: Record<string, string> = {
   slug: 'Enlace del torneo',
 }
 
+type EditSection = 'info' | 'equipos'
+
+const EDIT_SECTIONS: EditSection[] = ['info', 'equipos']
+
+const SECTION_META: Record<EditSection, { label: string; icon: LucideIcon }> = {
+  info: { label: 'Información', icon: Settings },
+  equipos: { label: 'Equipos', icon: Users },
+}
+
+function parseSection(value: string | null): EditSection {
+  return value && (EDIT_SECTIONS as string[]).includes(value)
+    ? (value as EditSection)
+    : 'info'
+}
+
 export function TournamentEditPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const isAdmin = useIsAdmin()
   const roles = useAuthStore((s) => s.roles)
   const [openSections, setOpenSections] = useState<string[]>(['datos'])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const section = parseSection(searchParams.get('section'))
+  const setSection = (next: EditSection) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === 'info') params.delete('section')
+        else params.set('section', next)
+        // Reset list pagination when switching sections.
+        params.delete('page')
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   const {
     data: tournament,
@@ -226,6 +256,41 @@ export function TournamentEditPage() {
         <h1 className="text-xl font-semibold">Editar torneo</h1>
       </div>
 
+      {/* Section tab bar — Información (the form) vs Equipos (unified teams +
+          inscriptions panel). URL-driven via ?section= so it is shareable. */}
+      <div
+        role="tablist"
+        aria-label="Secciones de edición"
+        className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1"
+      >
+        {EDIT_SECTIONS.map((id) => {
+          const { label, icon: Icon } = SECTION_META[id]
+          const active = id === section
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setSection(id)}
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors',
+                active
+                  ? 'bg-brand text-brand-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
+              <Icon className="size-4" />
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
+      {section === 'equipos' ? (
+        <AdminTeamsPanel tournament={tournament} />
+      ) : (
+        <>
       <Form {...form}>
         <form
           id="tournament-edit-form"
@@ -662,7 +727,8 @@ export function TournamentEditPage() {
         </Card>
       ) : null}
 
-      {/* Sticky save bar — always visible, disabled until there are changes. */}
+      {/* Sticky save bar — only on the Información section, where the form
+          lives; disabled until there are changes. */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-4 py-3">
           <span className="text-muted-foreground text-sm">
@@ -677,6 +743,8 @@ export function TournamentEditPage() {
           </Button>
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }
