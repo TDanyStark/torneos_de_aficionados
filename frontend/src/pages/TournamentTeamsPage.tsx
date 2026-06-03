@@ -15,6 +15,7 @@ import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { Pagination } from '@/components/shared/Pagination'
 import { ReactSelect, type SelectOption } from '@/components/shared/ReactSelect'
 import { TournamentLogo } from '@/features/tournaments/components/TournamentLogo'
+import { useTournamentBySlug } from '@/features/tournaments/api/useTournaments'
 import { useRegistrations } from '@/features/teams/api/useRegistrations'
 import { useRegistrationFilters } from '@/features/teams/hooks/useRegistrationFilters'
 import { RegistrationStatusBadge } from '@/features/teams/components/RegistrationStatusBadge'
@@ -42,8 +43,9 @@ const STATUS_OPTIONS: SelectOption<RegistrationStatus | ''>[] = [
 ]
 
 export function TournamentTeamsPage() {
-  const { id } = useParams<{ id: string }>()
-  const tournamentId = Number(id)
+  const { slug } = useParams<{ slug: string }>()
+  const tournament = useTournamentBySlug(slug)
+  const tournamentId = tournament.data?.id ?? 0
   const { filters, setFilters } = useRegistrationFilters()
   const { data, isLoading, isError, error } = useRegistrations(
     tournamentId,
@@ -58,7 +60,17 @@ export function TournamentTeamsPage() {
       : all
   }, [data, filters.channel])
 
-  if (!Number.isFinite(tournamentId) || tournamentId <= 0) {
+  if (tournament.isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (tournament.isError || !tournament.data) {
     return <ErrorState message="Torneo inválido." />
   }
 
@@ -150,7 +162,7 @@ export function TournamentTeamsPage() {
                 <CardFooter>
                   <Button variant="outline" size="sm" asChild>
                     <Link
-                      to={`/tournaments/${tournamentId}/teams/${registration.tournament_team_id}/manage`}
+                      to={`/t/${tournament.data.slug}/teams/${registration.tournament_team_id}/manage`}
                     >
                       <Settings2 className="size-4" />
                       Gestionar

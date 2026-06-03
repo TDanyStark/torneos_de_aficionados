@@ -10,12 +10,14 @@ import {
   useRegistrations,
   useDecideRegistration,
 } from '@/features/teams/api/useRegistrations'
+import { useTournamentBySlug } from '@/features/tournaments/api/useTournaments'
 import { useRegistrationFilters } from '@/features/teams/hooks/useRegistrationFilters'
 import { RegistrationCard } from '@/features/teams/components/RegistrationCard'
 
 export function RegistrationsInboxPage() {
-  const { id } = useParams<{ id: string }>()
-  const tournamentId = Number(id)
+  const { slug } = useParams<{ slug: string }>()
+  const tournament = useTournamentBySlug(slug)
+  const tournamentId = tournament.data?.id ?? 0
   const { filters, setFilters } = useRegistrationFilters()
   const { data, isLoading, isError, error } = useRegistrations(
     tournamentId,
@@ -43,7 +45,17 @@ export function RegistrationsInboxPage() {
     }
   }
 
-  if (!Number.isFinite(tournamentId) || tournamentId <= 0) {
+  if (tournament.isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (tournament.isError || !tournament.data) {
     return <ErrorState message="Torneo inválido." />
   }
 

@@ -58,19 +58,19 @@ export function OrganizerTournamentCard({
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/tournaments/${tournament.id}/teams`}>
+          <Link to={`/t/${tournament.slug}/teams`}>
             <Users className="size-4" />
             Equipos
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/tournaments/${tournament.id}/registrations`}>
+          <Link to={`/t/${tournament.slug}/registrations`}>
             <Inbox className="size-4" />
             Inscripciones
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/tournaments/${tournament.id}/fixtures`}>
+          <Link to={`/t/${tournament.slug}/fixtures`}>
             <CalendarDays className="size-4" />
             Fixtures
           </Link>

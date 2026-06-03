@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { useStages } from '@/features/tournaments/api/useStages'
+import { useTournamentBySlug } from '@/features/tournaments/api/useTournaments'
 import { GenerateFixtureDialog } from '@/features/fixtures/components/GenerateFixtureDialog'
 import { RegenerateFixtureDialog } from '@/features/fixtures/components/RegenerateFixtureDialog'
 import { StageRoundsManager } from '@/features/fixtures/components/StageRoundsManager'
@@ -24,20 +25,26 @@ const STAGE_TYPE_LABELS: Record<StageType, string> = {
 }
 
 export function StageFixturesPage() {
-  const { id } = useParams<{ id: string }>()
-  const tournamentId = Number(id)
-  const isOrganizer = useAuthStore((s) =>
-    s.roles.some(
-      (r) => r.tournament_id === tournamentId && r.role === 'organizer',
-    ),
+  const { slug } = useParams<{ slug: string }>()
+  const tournament = useTournamentBySlug(slug)
+  const tournamentId = tournament.data?.id ?? 0
+  const roles = useAuthStore((s) => s.roles)
+  const isOrganizer = roles.some(
+    (r) => r.tournament_id === tournamentId && r.role === 'organizer',
   )
-  const stages = useStages(
-    Number.isFinite(tournamentId) && tournamentId > 0
-      ? tournamentId
-      : undefined,
-  )
+  const stages = useStages(tournamentId > 0 ? tournamentId : undefined)
 
-  if (!Number.isFinite(tournamentId) || tournamentId <= 0) {
+  if (tournament.isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (tournament.isError || !tournament.data) {
     return <ErrorState message="Torneo inválido." />
   }
 
