@@ -1,6 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { useDeleteTeam, useTeamDeletionImpact } from '../api/useTeams'
+import { ApiError } from '@/lib/apiClient'
+import { teamKeys, useDeleteTeam, useTeamDeletionImpact } from '../api/useTeams'
+import { registrationKeys } from '../api/useRegistrations'
 
 interface DeleteTeamDialogProps {
   /** Tournament-team id to delete. */
@@ -26,6 +29,7 @@ export function DeleteTeamDialog({
   onOpenChange,
   onDeleted,
 }: DeleteTeamDialogProps) {
+  const qc = useQueryClient()
   const deleteTeam = useDeleteTeam()
   const deletionImpact = useTeamDeletionImpact(teamId, open)
 
@@ -42,7 +46,17 @@ export function DeleteTeamDialog({
       toast.success('Equipo eliminado')
       onOpenChange(false)
       onDeleted?.()
-    } catch {
+    } catch (error) {
+      // The team was already deleted (stale row): treat it as success and
+      // refresh the lists so the phantom row disappears.
+      if (error instanceof ApiError && error.status === 404) {
+        qc.invalidateQueries({ queryKey: teamKeys.all })
+        qc.invalidateQueries({ queryKey: registrationKeys.all })
+        toast.success('El equipo ya había sido eliminado')
+        onOpenChange(false)
+        onDeleted?.()
+        return
+      }
       toast.error('No se pudo eliminar el equipo')
     }
   }

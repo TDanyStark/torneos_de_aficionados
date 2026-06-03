@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowLeft, Settings, Users } from 'lucide-react'
+import { ArrowLeft, Settings, Layers, Flag, ClipboardList } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AdminTeamsPanel } from '@/features/teams/components/AdminTeamsPanel'
@@ -95,6 +95,35 @@ const FIELD_SECTION: Record<string, SectionKey> = {
   slug: 'inscripciones',
 }
 
+/**
+ * Maps each form field to the top-level edit tab that renders it. Used so a
+ * blocked save can switch to the tab holding the first invalid field.
+ */
+const FIELD_TAB: Record<string, EditSection> = {
+  name: 'info',
+  sport_id: 'info',
+  description: 'info',
+  logo_url: 'info',
+  starts_at: 'info',
+  ends_at: 'info',
+  rules: 'info',
+  prize_first: 'info',
+  prize_second: 'info',
+  prize_third: 'info',
+  prize_others: 'info',
+  periods_count: 'info',
+  points_win: 'info',
+  points_draw: 'info',
+  points_loss: 'info',
+  suspension_red_card: 'info',
+  suspension_double_yellow: 'info',
+  is_public: 'info',
+  registration_open: 'inscripciones',
+  registration_info: 'inscripciones',
+  roster_limit: 'inscripciones',
+  slug: 'inscripciones',
+}
+
 /** Human-readable label per field, used in the validation error toast. */
 const FIELD_LABEL: Record<string, string> = {
   name: 'Nombre del torneo',
@@ -121,13 +150,20 @@ const FIELD_LABEL: Record<string, string> = {
   slug: 'Enlace del torneo',
 }
 
-type EditSection = 'info' | 'equipos'
+type EditSection = 'info' | 'fases' | 'arbitros' | 'inscripciones'
 
-const EDIT_SECTIONS: EditSection[] = ['info', 'equipos']
+const EDIT_SECTIONS: EditSection[] = [
+  'info',
+  'fases',
+  'arbitros',
+  'inscripciones',
+]
 
 const SECTION_META: Record<EditSection, { label: string; icon: LucideIcon }> = {
-  info: { label: 'Información', icon: Settings },
-  equipos: { label: 'Equipos', icon: Users },
+  info: { label: 'Información y reglas', icon: Settings },
+  fases: { label: 'Fases', icon: Layers },
+  arbitros: { label: 'Árbitros', icon: Flag },
+  inscripciones: { label: 'Inscripciones', icon: ClipboardList },
 }
 
 function parseSection(value: string | null): EditSection {
@@ -203,6 +239,11 @@ export function TournamentEditPage() {
   // toast so errors in collapsed sections (or fields without UI) are visible.
   const onInvalid = (errors: FieldErrors<TournamentFormValues>) => {
     const fields = Object.keys(errors)
+
+    // Switch to the tab that holds the first invalid field, so the error is
+    // never hidden behind another tab.
+    const firstTab = fields.map((f) => FIELD_TAB[f]).find(Boolean)
+    if (firstTab && firstTab !== section) setSection(firstTab)
 
     const sections = fields
       .map((f) => FIELD_SECTION[f])
@@ -287,10 +328,9 @@ export function TournamentEditPage() {
         })}
       </div>
 
-      {section === 'equipos' ? (
-        <AdminTeamsPanel tournament={tournament} />
-      ) : (
-        <>
+      {/* The form is always mounted so its react-hook-form state survives tab
+          switches; only the visible cards change per tab. Fields are spread
+          across the «Información y reglas» and «Inscripciones» tabs. */}
       <Form {...form}>
         <form
           id="tournament-edit-form"
@@ -298,6 +338,7 @@ export function TournamentEditPage() {
           className="space-y-5"
         >
           {/* 1 — Datos (always rendered open by default) */}
+          <div className={section === 'info' ? 'space-y-5' : 'hidden'}>
           <Card>
             <CardHeader>
               <CardTitle>Datos</CardTitle>
@@ -569,182 +610,210 @@ export function TournamentEditPage() {
                     />
                   </AccordionContent>
                 </AccordionItem>
-
-                {/* 5 — Inscripciones */}
-                <AccordionItem value="inscripciones">
-                  <AccordionTrigger>Inscripciones</AccordionTrigger>
-                  <AccordionContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="is_public"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-md border p-3">
-                          <div>
-                            <FormLabel>Listar públicamente</FormLabel>
-                            <FormDescription>
-                              Si lo activas, el torneo aparece en la lista
-                              pública de /torneos. Si no, solo es accesible con
-                              el enlace que compartas.
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              aria-label="Listar públicamente"
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="slug"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Enlace del torneo</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="liga-espana-junio-2026"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Parte final del enlace público:{' '}
-                            {`${window.location.origin}/t/`}
-                            <strong>{field.value || 'tu-enlace'}</strong>.
-                            Cámbialo si recibes spam.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="registration_open"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-md border p-3">
-                          <div>
-                            <FormLabel>Inscripciones abiertas</FormLabel>
-                            <FormDescription>
-                              Cuando están abiertas, aparece el botón «Inscribir
-                              mi equipo» en el enlace del torneo.
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              aria-label="Inscripciones abiertas"
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="registration_info"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Información para inscritos</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              rows={3}
-                              placeholder="Costo, requisitos, sede… (opcional)"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="roster_limit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Límite de inscritos por equipo</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={5}
-                              max={100}
-                              placeholder="Sin límite"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Entre 5 y 100, o vacío para sin límite.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
               </Accordion>
             </CardContent>
           </Card>
+
+          {/* Visibilidad pública del torneo. */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Visibilidad</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="is_public"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <FormLabel>Listar públicamente</FormLabel>
+                      <FormDescription>
+                        Si lo activas, el torneo aparece en la lista pública de
+                        /torneos. Si no, solo es accesible con el enlace que
+                        compartas.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        aria-label="Listar públicamente"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Publicidad — solo administradores de la plataforma. */}
+          {isAdmin ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Publicidad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TournamentAdsPanel tournamentId={tournament.id} />
+              </CardContent>
+            </Card>
+          ) : null}
+          </div>
+
+          {/* TAB: Inscripciones — ajustes de inscripción + listado de equipos. */}
+          <div className={section === 'inscripciones' ? 'space-y-5' : 'hidden'}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ajustes de inscripción</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Enlace del torneo</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="liga-espana-junio-2026"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Parte final del enlace público:{' '}
+                        {`${window.location.origin}/t/`}
+                        <strong>{field.value || 'tu-enlace'}</strong>. Cámbialo
+                        si recibes spam.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="registration_open"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-md border p-3">
+                      <div>
+                        <FormLabel>Inscripciones abiertas</FormLabel>
+                        <FormDescription>
+                          Cuando están abiertas, aparece el botón «Inscribir mi
+                          equipo» en el enlace del torneo.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          aria-label="Inscripciones abiertas"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="registration_info"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Información para inscritos</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={3}
+                          placeholder="Costo, requisitos, sede… (opcional)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="roster_limit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Límite de inscritos por equipo</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={5}
+                          max={100}
+                          placeholder="Sin límite"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Entre 5 y 100, o vacío para sin límite.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <AdminTeamsPanel tournament={tournament} />
+          </div>
         </form>
       </Form>
 
-      {/* Fases — solo el organizador (dueño) del torneo. */}
-      {isOrganizer ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fases</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <StageManager tournamentId={tournament.id} />
-            <div className="border-t pt-6">
-              <StagePanelManager tournamentId={tournament.id} />
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* Árbitros — solo el organizador (dueño) del torneo. */}
-      {isOrganizer ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Árbitros</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RefereesManager tournamentId={tournament.id} />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* Publicidad — solo administradores de la plataforma. */}
-      {isAdmin ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Publicidad</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TournamentAdsPanel tournamentId={tournament.id} />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* Sticky save bar — only on the Información section, where the form
-          lives; disabled until there are changes. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-4 py-3">
-          <span className="text-muted-foreground text-sm">
-            {isDirty ? 'Tienes cambios sin guardar' : 'Todo guardado'}
-          </span>
-          <Button
-            type="submit"
-            form="tournament-edit-form"
-            disabled={!isDirty || isSubmitting}
-          >
-            {isSubmitting ? 'Guardando…' : 'Guardar cambios'}
-          </Button>
-        </div>
+      {/* TAB: Fases — solo el organizador (dueño) del torneo. */}
+      <div className={section === 'fases' ? 'space-y-5' : 'hidden'}>
+        {isOrganizer ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Fases</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <StageManager tournamentId={tournament.id} />
+              <div className="border-t pt-6">
+                <StagePanelManager tournamentId={tournament.id} />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Solo el organizador del torneo puede gestionar las fases.
+          </p>
+        )}
       </div>
-        </>
-      )}
+
+      {/* TAB: Árbitros — solo el organizador (dueño) del torneo. */}
+      <div className={section === 'arbitros' ? 'space-y-5' : 'hidden'}>
+        {isOrganizer ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Árbitros</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RefereesManager tournamentId={tournament.id} />
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Solo el organizador del torneo puede gestionar los árbitros.
+          </p>
+        )}
+      </div>
+
+      {/* Sticky save bar — only on tabs that hold form fields (Información y
+          reglas, Inscripciones); disabled until there are changes. */}
+      {section === 'info' || section === 'inscripciones' ? (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-4 py-3">
+            <span className="text-muted-foreground text-sm">
+              {isDirty ? 'Tienes cambios sin guardar' : 'Todo guardado'}
+            </span>
+            <Button
+              type="submit"
+              form="tournament-edit-form"
+              disabled={!isDirty || isSubmitting}
+            >
+              {isSubmitting ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

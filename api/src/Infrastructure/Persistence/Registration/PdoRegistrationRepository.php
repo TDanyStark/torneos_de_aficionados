@@ -56,6 +56,7 @@ final class PdoRegistrationRepository implements RegistrationRepository
                 FROM registrations r
                 INNER JOIN tournament_teams tt ON tt.id = r.tournament_team_id
                 WHERE r.tournament_id = :tournament_id
+                  AND tt.deleted_at IS NULL
                 ORDER BY (r.status IN ('pending', 'submitted')) DESC, r.updated_at DESC
                 LIMIT :limit OFFSET :offset";
 
@@ -74,7 +75,11 @@ final class PdoRegistrationRepository implements RegistrationRepository
     public function countByTournament(int $tournamentId): int
     {
         $stmt = $this->pdo->prepare(
-            'SELECT COUNT(*) FROM registrations WHERE tournament_id = :tournament_id'
+            'SELECT COUNT(*)
+             FROM registrations r
+             INNER JOIN tournament_teams tt ON tt.id = r.tournament_team_id
+             WHERE r.tournament_id = :tournament_id
+               AND tt.deleted_at IS NULL'
         );
         $stmt->execute(['tournament_id' => $tournamentId]);
 
@@ -105,6 +110,7 @@ final class PdoRegistrationRepository implements RegistrationRepository
              INNER JOIN tournament_teams tt ON tt.id = r.tournament_team_id
              INNER JOIN tournaments t ON t.id = r.tournament_id
              WHERE tt.delegate_user_id = :user_id
+               AND tt.deleted_at IS NULL
              ORDER BY r.updated_at DESC, r.id DESC"
         );
         $stmt->execute(['user_id' => $userId]);
@@ -124,6 +130,7 @@ final class PdoRegistrationRepository implements RegistrationRepository
              WHERE r.tournament_id = :tournament_id
                AND r.is_late = 1
                AND tt.status = 'approved'
+               AND tt.deleted_at IS NULL
              ORDER BY (r.joined_at_round IS NULL), r.joined_at_round ASC, r.id ASC"
         );
         $stmt->execute(['tournament_id' => $tournamentId]);
