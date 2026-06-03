@@ -93,6 +93,7 @@ export function RegistrationsInboxPage() {
               <RegistrationCard
                 key={registration.id}
                 registration={registration}
+                slug={tournament.data.slug}
                 pending={pendingId === registration.id}
                 onApprove={(rid) => onDecide(rid, 'approved')}
                 onReject={(rid) => onDecide(rid, 'rejected')}

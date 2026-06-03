@@ -62,6 +62,10 @@ final class CreateRegistrationAction extends ApiAction
         if ($teamName === '') {
             throw new ValidationException(['team_name' => 'El nombre del equipo es obligatorio.']);
         }
+        $shortNameRaw = isset($body['short_name']) ? trim((string) $body['short_name']) : '';
+        if ($shortNameRaw !== '' && mb_strlen($shortNameRaw) > 3) {
+            throw new ValidationException(['short_name' => 'La abreviatura no puede superar 3 caracteres.']);
+        }
 
         // Roster: at least one player, each with cédula + nombre completo.
         $rawPlayers = is_array($body['players'] ?? null) ? array_values($body['players']) : [];
@@ -107,7 +111,7 @@ final class CreateRegistrationAction extends ApiAction
                 : null;
         }
 
-        $shortName = isset($body['short_name']) && $body['short_name'] !== '' ? (string) $body['short_name'] : null;
+        $shortName = $shortNameRaw !== '' ? $shortNameRaw : null;
         $coachName = isset($body['coach_name']) && trim((string) $body['coach_name']) !== '' ? trim((string) $body['coach_name']) : null;
         $logoUrl   = isset($body['logo_url']) && $body['logo_url'] !== '' ? (string) $body['logo_url'] : null;
 

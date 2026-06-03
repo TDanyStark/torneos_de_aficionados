@@ -1,4 +1,5 @@
-import { Check, Clock, LinkIcon, Pencil, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Check, Clock, LinkIcon, Pencil, Users, X } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -13,6 +14,8 @@ import { RegistrationStatusBadge } from './RegistrationStatusBadge'
 
 interface RegistrationCardProps {
   registration: Registration
+  /** Tournament slug — builds the link to the team management view. */
+  slug: string
   onApprove: (id: number) => void
   onReject: (id: number) => void
   pending?: boolean
@@ -25,6 +28,7 @@ const CHANNEL_LABEL: Record<Registration['channel'], string> = {
 
 export function RegistrationCard({
   registration,
+  slug,
   onApprove,
   onReject,
   pending,
@@ -59,27 +63,37 @@ export function RegistrationCard({
           </Badge>
         ) : null}
       </CardContent>
-      {isDecidable ? (
-        <CardFooter className="gap-2">
-          <Button
-            size="sm"
-            disabled={pending}
-            onClick={() => onApprove(registration.id)}
+      <CardFooter className="flex-wrap gap-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link
+            to={`/t/${slug}/teams/${registration.tournament_team_id}/manage`}
           >
-            <Check className="size-4" />
-            Aprobar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pending}
-            onClick={() => onReject(registration.id)}
-          >
-            <X className="size-4" />
-            Rechazar
-          </Button>
-        </CardFooter>
-      ) : null}
+            <Users className="size-4" />
+            Ver equipo y jugadores
+          </Link>
+        </Button>
+        {isDecidable ? (
+          <>
+            <Button
+              size="sm"
+              disabled={pending}
+              onClick={() => onApprove(registration.id)}
+            >
+              <Check className="size-4" />
+              Aprobar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => onReject(registration.id)}
+            >
+              <X className="size-4" />
+              Rechazar
+            </Button>
+          </>
+        ) : null}
+      </CardFooter>
     </Card>
   )
 }

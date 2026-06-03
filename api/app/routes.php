@@ -73,11 +73,14 @@ use App\Application\Actions\Stage\UpdateStageAction;
 use App\Application\Actions\Team\CreateTeamAction;
 use App\Application\Actions\Team\DeleteTeamAction;
 use App\Application\Actions\Team\ListTeamsAction;
+use App\Application\Actions\Team\ShowMyTeamInTournamentAction;
 use App\Application\Actions\Team\UpdateTeamAction;
+use App\Application\Actions\Team\UploadTeamLogoAction;
 use App\Application\Actions\TeamPlayer\AddPlayerToTeamAction;
 use App\Application\Actions\TeamPlayer\DeleteTeamPlayerAction;
 use App\Application\Actions\TeamPlayer\ListRosterAction;
 use App\Application\Actions\TeamPlayer\UpdateTeamPlayerAction;
+use App\Application\Actions\TeamPlayer\UploadTeamPlayerPhotoAction;
 use App\Application\Actions\Tournament\CreateTournamentAction;
 use App\Application\Actions\Tournament\DeleteTournamentAction;
 use App\Application\Actions\Tournament\ListFollowedTournamentsAction;
@@ -198,6 +201,12 @@ return function (App $app) {
             $tournaments->get('/{id}/teams', ListTeamsAction::class);
             $tournaments->post('/{id}/teams', CreateTeamAction::class)
                 ->add($roleGuard->require('organizer', 'delegate'))
+                ->add(JwtAuthMiddleware::class);
+
+            // Whether the current user already enrolled a team here (delegate).
+            // Powers the hub button "Inscribir mi equipo" vs "Mi equipo". Authed
+            // only (any logged-in user), returns null when they have no team.
+            $tournaments->get('/{id}/my-team', ShowMyTeamInTournamentAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Player pool lookup by cédula (organizer|delegate, owner pool).
@@ -338,6 +347,10 @@ return function (App $app) {
             $teams->delete('/{id}', DeleteTeamAction::class)
                 ->add(JwtAuthMiddleware::class);
 
+            // Team logo upload in management (organizer|owner delegate, multipart).
+            $teams->post('/{id:[0-9]+}/logo', UploadTeamLogoAction::class)
+                ->add(JwtAuthMiddleware::class);
+
             // Roster (nested under a team). List public; add organizer|delegate.
             $teams->get('/{id}/players', ListRosterAction::class);
             $teams->post('/{id}/players', AddPlayerToTeamAction::class)
@@ -349,6 +362,10 @@ return function (App $app) {
             $teamPlayers->put('/{id}', UpdateTeamPlayerAction::class)
                 ->add(JwtAuthMiddleware::class);
             $teamPlayers->delete('/{id}', DeleteTeamPlayerAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Player photo upload in management (organizer|owner delegate, multipart).
+            $teamPlayers->post('/{id:[0-9]+}/photo', UploadTeamPlayerPhotoAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
 

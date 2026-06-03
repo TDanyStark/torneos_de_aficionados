@@ -10,6 +10,7 @@ import {
 import { ErrorState } from '@/components/shared/StateMessage'
 import { apiClient } from '@/lib/apiClient'
 import { tournamentKeys } from '@/features/tournaments/api/useTournaments'
+import { useAuthStore } from '@/stores/authStore'
 import type { Tournament } from '@/features/tournaments/types'
 import { useTeam } from '../api/useTeams'
 import {
@@ -31,6 +32,14 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
   const roster = useRoster(teamId)
   const deleteTeamPlayer = useDeleteTeamPlayer(teamId)
   const [removingId, setRemovingId] = useState<number | null>(null)
+
+  // Per-tournament organizer role. Organizers moderate players (reject/re-accept);
+  // both organizer and the owner delegate can edit roster data + photos.
+  const isOrganizer = useAuthStore((s) =>
+    s.roles.some(
+      (r) => r.tournament_id === tournamentId && r.role === 'organizer',
+    ),
+  )
 
   // Read the tournament roster cap to gate the add-player form (same
   // /tournaments/by-id/{id} pattern used by the edit page; this surface is
@@ -94,6 +103,9 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
           ) : (
             <RosterTable
               players={roster.data ?? []}
+              teamId={teamId}
+              canModerate={isOrganizer}
+              canEdit
               onRemove={onRemovePlayer}
               removingId={removingId}
             />

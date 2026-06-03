@@ -12,7 +12,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { applyApiError } from '@/lib/formErrors'
-import { useUpdateTeam } from '../api/useTeams'
+import { ImageUploader } from '@/components/shared/ImageUploader'
+import { useUpdateTeam, useUploadTeamLogo } from '../api/useTeams'
 import { teamSchema, type TeamFormValues } from '../schemas'
 import type { Team } from '../types'
 
@@ -20,6 +21,7 @@ const KNOWN_FIELDS = ['name', 'short_name', 'logo_url', 'coach_name'] as const
 
 export function TeamEditForm({ team }: { team: Team }) {
   const updateTeam = useUpdateTeam(team.id)
+  const uploadLogo = useUploadTeamLogo(team.id)
 
   const form = useForm<TeamFormValues>({
     resolver: zodResolver(teamSchema),
@@ -71,7 +73,7 @@ export function TeamEditForm({ team }: { team: Team }) {
             <FormItem>
               <FormLabel>Abreviatura</FormLabel>
               <FormControl>
-                <Input placeholder="Opcional" {...field} />
+                <Input placeholder="Máx. 3" maxLength={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -81,10 +83,18 @@ export function TeamEditForm({ team }: { team: Team }) {
           control={form.control}
           name="logo_url"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Logo (URL)</FormLabel>
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Logo del equipo</FormLabel>
               <FormControl>
-                <Input placeholder="Opcional" {...field} />
+                <ImageUploader
+                  currentUrl={field.value || null}
+                  label={`Logo de ${team.name}`}
+                  upload={async (file) => {
+                    const res = await uploadLogo.mutateAsync(file)
+                    field.onChange(res.logo_url)
+                    return res.logo_url
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

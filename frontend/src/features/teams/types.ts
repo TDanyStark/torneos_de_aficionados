@@ -61,6 +61,8 @@ export interface Player {
   updated_at: string
 }
 
+export type TeamPlayerStatus = 'active' | 'inactive' | 'rejected'
+
 /** Roster entry: a player attached to a specific team. */
 export interface TeamPlayer {
   id: number
@@ -70,7 +72,9 @@ export interface TeamPlayer {
   position: string | null
   is_captain: BackendBool
   is_delegate: BackendBool
-  status: string
+  status: TeamPlayerStatus
+  rejection_reason: string | null
+  rejected_at: string | null
   /** Flattened player columns embedded by the backend for display. */
   document_id: string
   full_name: string
@@ -89,7 +93,6 @@ export interface TeamPlayer {
 export interface AddPlayerPayload {
   document_id: string
   shirt_number?: number | null
-  position?: string | null
   is_captain?: boolean
   is_delegate?: boolean
   /** Required only when creating a brand-new player. */
@@ -105,6 +108,32 @@ export interface UpdateTeamPlayerPayload {
   position?: string | null
   is_captain?: boolean
   is_delegate?: boolean
+  /** Player moderation (organizer-only). */
+  status?: TeamPlayerStatus
+  rejection_reason?: string | null
+}
+
+/** Response of the management team-logo upload (POST /tournament-teams/{id}/logo). */
+export interface UploadTeamLogoResponse {
+  logo_url: string
+  team: Team
+}
+
+/** Response of the management player-photo upload (POST /team-players/{id}/photo). */
+export interface UploadTeamPlayerPhotoResponse {
+  photo_url: string
+  team_player: TeamPlayer
+}
+
+/**
+ * GET /tournaments/{id}/my-team — whether the current user already enrolled a
+ * team (as delegate) in this tournament. null when they have no active team.
+ */
+export interface MyTeamInTournament {
+  team_id: number
+  team_status: TeamStatus
+  slug: string
+  registration_status: RegistrationStatus | null
 }
 
 /* ------------------------------------------------------------------ */

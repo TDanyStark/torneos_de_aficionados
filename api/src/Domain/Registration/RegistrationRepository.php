@@ -13,6 +13,9 @@ interface RegistrationRepository
 {
     public function findById(int $id): ?Registration;
 
+    /** The (latest) registration for a given team, if any. */
+    public function findByTeam(int $teamId): ?Registration;
+
     /**
      * Paginated inbox for a tournament. Pending/submitted first, then
      * updated_at DESC.

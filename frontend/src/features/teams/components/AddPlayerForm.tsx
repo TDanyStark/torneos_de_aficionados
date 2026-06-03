@@ -41,7 +41,6 @@ const KNOWN_FIELDS = [
   'photo_url',
   'alias',
   'shirt_number',
-  'position',
 ] as const
 
 /**
@@ -79,7 +78,6 @@ export function AddPlayerForm({
       form.setValue('full_name', foundPlayer.full_name)
       form.setValue('birthdate', foundPlayer.birthdate ?? '')
       form.setValue('phone', foundPlayer.phone ?? '')
-      form.setValue('photo_url', foundPlayer.photo_url ?? '')
     }
   }, [foundPlayer, form])
 
@@ -100,7 +98,6 @@ export function AddPlayerForm({
           values.shirt_number && values.shirt_number !== ''
             ? Number(values.shirt_number)
             : null,
-        position: values.position?.trim() || null,
         alias: values.alias?.trim() || null,
         is_captain: values.is_captain,
         is_delegate: values.is_delegate,
@@ -219,20 +216,10 @@ export function AddPlayerForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="photo_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Foto (URL)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Opcional" readOnly={isFound} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
+        <p className="text-muted-foreground text-xs">
+          Podrás subir la foto del jugador desde la plantilla, una vez agregado.
+        </p>
 
         {/* Roster data — always editable */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -244,19 +231,6 @@ export function AddPlayerForm({
                 <FormLabel>Dorsal</FormLabel>
                 <FormControl>
                   <Input type="number" min={0} placeholder="Ej. 10" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Posición</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ej. Delantero" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

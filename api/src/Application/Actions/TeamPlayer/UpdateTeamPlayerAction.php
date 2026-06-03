@@ -18,10 +18,14 @@ use Psr\Http\Message\ResponseInterface as Response;
  * PUT /api/v1/team-players/{id}  (organizer|delegate)
  * Updates roster data (shirt number, position, captain/delegate flags, status).
  * {id} is the roster entry id -> resolved team -> tournament for the inline check.
+ *
+ * Player moderation: only the organizer may reject a roster entry (status =
+ * 'rejected', requires a reason) or re-accept it (status = 'active', which
+ * clears the reason). Delegates can edit roster data but not moderate.
  */
 final class UpdateTeamPlayerAction extends ApiAction
 {
-    private const STATUSES = ['active', 'inactive'];
+    private const STATUSES = ['active', 'inactive', 'rejected'];
 
     public function __construct(
         JsonResponder $responder,
@@ -82,7 +86,34 @@ final class UpdateTeamPlayerAction extends ApiAction
             if (!in_array($status, self::STATUSES, true)) {
                 $errors['status'] = 'El estado del jugador no es válido.';
             } else {
+                // Moderation (reject / re-accept) is organizer-only. A delegate
+                // editing other roster data never touches status, so we only
+                // gate when the request actually changes moderation state.
+                $isModeration = $status === 'rejected'
+                    || ($status === 'active' && $teamPlayer->status === 'rejected');
+                if ($isModeration) {
+                    $this->authorizer->assert($user, $team->tournamentId, ['organizer']);
+                }
+
                 $data['status'] = $status;
+
+                if ($status === 'rejected') {
+                    $reason = isset($body['rejection_reason'])
+                        ? trim((string) $body['rejection_reason'])
+                        : '';
+                    if ($reason === '') {
+                        $errors['rejection_reason'] = 'Debes indicar el motivo del rechazo.';
+                    } elseif (mb_strlen($reason) > 255) {
+                        $errors['rejection_reason'] = 'El motivo no puede superar 255 caracteres.';
+                    } else {
+                        $data['rejection_reason'] = $reason;
+                        $data['rejected_at'] = date('Y-m-d H:i:s');
+                    }
+                } else {
+                    // Leaving the rejected state clears the moderation metadata.
+                    $data['rejection_reason'] = null;
+                    $data['rejected_at'] = null;
+                }
             }
         }
 

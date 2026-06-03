@@ -26,6 +26,25 @@ final class PdoTeamRepository implements TeamRepository
         return $row ? Team::fromRow($row) : null;
     }
 
+    public function findByDelegateInTournament(int $tournamentId, int $delegateUserId): ?Team
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM tournament_teams
+             WHERE tournament_id = :tournament_id
+               AND delegate_user_id = :delegate_user_id
+               AND status <> 'withdrawn'
+               AND deleted_at IS NULL
+             ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute([
+            'tournament_id'    => $tournamentId,
+            'delegate_user_id' => $delegateUserId,
+        ]);
+        $row = $stmt->fetch();
+
+        return $row ? Team::fromRow($row) : null;
+    }
+
     /**
      * @param array{status?:?string,q?:?string} $filters
      * @return array<int,Team>

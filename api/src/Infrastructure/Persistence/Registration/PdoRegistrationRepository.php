@@ -29,6 +29,21 @@ final class PdoRegistrationRepository implements RegistrationRepository
         return $row ? Registration::fromRow($row) : null;
     }
 
+    public function findByTeam(int $teamId): ?Registration
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT r.*, tt.name AS team_name, tt.status AS team_status
+             FROM registrations r
+             INNER JOIN tournament_teams tt ON tt.id = r.tournament_team_id
+             WHERE r.tournament_team_id = :team_id
+             ORDER BY r.id DESC LIMIT 1'
+        );
+        $stmt->execute(['team_id' => $teamId]);
+        $row = $stmt->fetch();
+
+        return $row ? Registration::fromRow($row) : null;
+    }
+
     /**
      * Inbox order: pending/submitted first (still-open ones on top), then
      * updated_at DESC.

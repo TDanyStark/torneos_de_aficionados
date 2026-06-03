@@ -8,6 +8,7 @@ import type {
   AddPlayerPayload,
   TeamPlayer,
   UpdateTeamPlayerPayload,
+  UploadTeamPlayerPhotoResponse,
 } from '../types'
 
 export const rosterKeys = {
@@ -64,6 +65,34 @@ export function useDeleteTeamPlayer(teamId: number) {
   return useMutation({
     mutationFn: (teamPlayerId: number) =>
       apiClient.delete(`/team-players/${teamPlayerId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: rosterKeys.list(teamId) })
+    },
+  })
+}
+
+/**
+ * Management player-photo upload (organizer|owner delegate). Posts multipart
+ * `file` to the roster entry; the backend crops to 398x398, persists the
+ * player's photo_url and returns it.
+ */
+export function useUploadTeamPlayerPhoto(teamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      teamPlayerId,
+      file,
+    }: {
+      teamPlayerId: number
+      file: File
+    }) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return apiClient.postForm<UploadTeamPlayerPhotoResponse>(
+        `/team-players/${teamPlayerId}/photo`,
+        formData,
+      )
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: rosterKeys.list(teamId) })
     },

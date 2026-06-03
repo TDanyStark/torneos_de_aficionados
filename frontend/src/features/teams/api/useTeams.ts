@@ -7,9 +7,11 @@ import { apiClient } from '@/lib/apiClient'
 import type { Paginated } from '@/lib/apiTypes'
 import type {
   CreateTeamPayload,
+  MyTeamInTournament,
   Team,
   TeamFilters,
   UpdateTeamPayload,
+  UploadTeamLogoResponse,
 } from '../types'
 
 export const teamKeys = {
@@ -93,5 +95,44 @@ export function useDeleteTeam() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teamKeys.all })
     },
+  })
+}
+
+/**
+ * Management team-logo upload (organizer|owner delegate). Posts multipart `file`;
+ * the backend crops to 398x398, persists logo_url and returns it.
+ */
+export function useUploadTeamLogo(teamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return apiClient.postForm<UploadTeamLogoResponse>(
+        `/tournament-teams/${teamId}/logo`,
+        formData,
+      )
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: teamKeys.all })
+      qc.invalidateQueries({ queryKey: teamKeys.detail(teamId) })
+    },
+  })
+}
+
+/**
+ * Whether the current user already enrolled a team (as delegate) in this
+ * tournament. Returns null when they have none. Disabled without a session.
+ */
+export function useMyTeam(tournamentId: number | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ['teams', 'my-team', tournamentId ?? 0] as const,
+    enabled: enabled && Number.isFinite(tournamentId) && Number(tournamentId) > 0,
+    queryFn: ({ signal }) =>
+      apiClient.get<MyTeamInTournament | null>(
+        `/tournaments/${tournamentId}/my-team`,
+        undefined,
+        signal,
+      ),
   })
 }

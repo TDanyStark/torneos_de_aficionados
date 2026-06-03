@@ -16,7 +16,7 @@ const optionalPositiveIntString = z
 /** Team create / edit form. */
 export const teamSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  short_name: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
+  short_name: z.string().max(3, 'Máximo 3 caracteres').optional().or(z.literal('')),
   // Relative upload path (e.g. /uploads/teams/<hex>.jpg) — not an absolute URL.
   logo_url: z.string().max(2048).optional().or(z.literal('')),
   coach_name: z.string().max(120, 'Máximo 120 caracteres').optional().or(z.literal('')),
@@ -41,7 +41,6 @@ export const addPlayerSchema = z.object({
   photo_url: z.string().max(2048).optional().or(z.literal('')),
   alias: z.string().max(60, 'Máximo 60 caracteres').optional().or(z.literal('')),
   shirt_number: optionalPositiveIntString,
-  position: z.string().optional().or(z.literal('')),
   is_captain: z.boolean(),
   is_delegate: z.boolean(),
 })
@@ -56,7 +55,6 @@ export const DEFAULT_ADD_PLAYER_FORM: AddPlayerFormValues = {
   photo_url: '',
   alias: '',
   shirt_number: '',
-  position: '',
   is_captain: false,
   is_delegate: false,
 }

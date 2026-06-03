@@ -52,6 +52,16 @@ final class RegisterTeamService
         $delegateUserId = (int) $input['delegate_user_id'];
         $organizerUserId = $tournament->ownerUserId;
 
+        // One team per delegate per tournament: a delegate who already has a
+        // non-withdrawn team here cannot self-register another. The frontend
+        // routes them to their existing team instead.
+        $existingTeam = $this->teams->findByDelegateInTournament($tournament->id, $delegateUserId);
+        if ($existingTeam !== null) {
+            throw new ValidationException([
+                'team' => 'Ya inscribiste un equipo en este torneo. Solo puedes inscribir uno.',
+            ]);
+        }
+
         /** @var list<array<string,mixed>> $players */
         $players = is_array($input['players'] ?? null) ? array_values($input['players']) : [];
         if (count($players) < 1) {

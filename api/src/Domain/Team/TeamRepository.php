@@ -14,6 +14,13 @@ interface TeamRepository
     public function findById(int $id): ?Team;
 
     /**
+     * The team a given delegate enrolled in a tournament, if any (one team per
+     * delegate per tournament). Excludes withdrawn teams so a withdrawn delegate
+     * may re-register. Returns null when the delegate has no active team.
+     */
+    public function findByDelegateInTournament(int $tournamentId, int $delegateUserId): ?Team;
+
+    /**
      * Paginated public listing for a tournament with optional filters.
      *
      * @param array{status?:?string,q?:?string} $filters
