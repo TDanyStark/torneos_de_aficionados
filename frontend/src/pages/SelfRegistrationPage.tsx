@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { CheckCircle2, Info, LogIn, Trophy } from 'lucide-react'
+import { CheckCircle2, Info, LogIn, Trophy, Users } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { SelfRegistrationForm } from '@/features/teams/components/SelfRegistrationForm'
 import { apiClient } from '@/lib/apiClient'
 import { tournamentKeys } from '@/features/tournaments/api/useTournaments'
+import { useMyTeam } from '@/features/teams/api/useTeams'
 import type { Tournament } from '@/features/tournaments/types'
 import { useAuthStore } from '@/stores/authStore'
 import type { Registration } from '@/features/teams/types'
@@ -56,6 +57,13 @@ export function SelfRegistrationPage() {
   })
 
   const registrationInfo = tournamentQuery.data?.registration_info?.trim()
+
+  // A delegate may only enroll one team per tournament. If they already have
+  // one, route them to manage it instead of letting them register another.
+  const myTeam = useMyTeam(
+    hasTournamentContext ? numericTournamentId : undefined,
+    Boolean(token),
+  )
 
   return (
     <div className="bg-background min-h-screen">
@@ -115,6 +123,29 @@ export function SelfRegistrationPage() {
                   state={{ from: location.pathname + location.search }}
                 >
                   Crear cuenta
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : myTeam.data ? (
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mb-2 flex justify-center">
+                <Users className="text-brand size-10" />
+              </div>
+              <CardTitle>Ya inscribiste un equipo</CardTitle>
+              <CardDescription>
+                Solo puedes inscribir un equipo en este torneo. Gestiona el tuyo
+                para ver su estado y agregar jugadores si tienes cupo.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Button asChild>
+                <Link
+                  to={`/t/${myTeam.data.slug}/teams/${myTeam.data.team_id}/manage`}
+                >
+                  <Users className="size-4" />
+                  Gestionar mi equipo
                 </Link>
               </Button>
             </CardContent>

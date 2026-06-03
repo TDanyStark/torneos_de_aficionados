@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Card,
@@ -8,10 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ErrorState } from '@/components/shared/StateMessage'
-import { apiClient } from '@/lib/apiClient'
-import { tournamentKeys } from '@/features/tournaments/api/useTournaments'
 import { useAuthStore } from '@/stores/authStore'
-import type { Tournament } from '@/features/tournaments/types'
 import { useTeam } from '../api/useTeams'
 import {
   useRoster,
@@ -24,10 +20,16 @@ import { AddPlayerForm } from './AddPlayerForm'
 interface TeamManagerProps {
   tournamentId: number
   teamId: number
+  /** Tournament roster cap (null = unlimited). Resolved by the parent page. */
+  rosterLimit?: number | null
 }
 
 /** Organizer/delegate management surface: edit team + roster CRUD. */
-export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
+export function TeamManager({
+  tournamentId,
+  teamId,
+  rosterLimit = null,
+}: TeamManagerProps) {
   const teamQuery = useTeam(tournamentId, teamId)
   const roster = useRoster(teamId)
   const deleteTeamPlayer = useDeleteTeamPlayer(teamId)
@@ -41,17 +43,6 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
     ),
   )
 
-  // Read the tournament roster cap to gate the add-player form (same
-  // /tournaments/by-id/{id} pattern used by the edit page; this surface is
-  // for logged-in organizers/delegates).
-  const tournamentQuery = useQuery({
-    queryKey: [...tournamentKeys.all, 'by-id', tournamentId],
-    enabled: Number.isFinite(tournamentId) && tournamentId > 0,
-    queryFn: () =>
-      apiClient.get<Tournament>(`/tournaments/by-id/${tournamentId}`),
-  })
-
-  const rosterLimit = tournamentQuery.data?.roster_limit ?? null
   const currentCount = roster.data?.length ?? 0
 
   const onRemovePlayer = async (teamPlayerId: number) => {
@@ -106,6 +97,7 @@ export function TeamManager({ tournamentId, teamId }: TeamManagerProps) {
               teamId={teamId}
               canModerate={isOrganizer}
               canEdit
+              canViewHistory={isOrganizer}
               onRemove={onRemovePlayer}
               removingId={removingId}
             />

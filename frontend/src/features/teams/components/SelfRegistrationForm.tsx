@@ -194,7 +194,7 @@ export function SelfRegistrationForm({
                 <FormItem>
                   <FormLabel>Abreviatura</FormLabel>
                   <FormControl>
-                    <Input placeholder="Opcional" {...field} />
+                    <Input placeholder="Máx. 3" maxLength={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

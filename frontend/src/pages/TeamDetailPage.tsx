@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Shield } from 'lucide-react'
+import { ArrowLeft, Settings2, Shield } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import { useTeam } from '@/features/teams/api/useTeams'
 import { useRoster } from '@/features/teams/api/useRoster'
 import { RosterTable } from '@/features/teams/components/RosterTable'
 import { TeamStatusBadge } from '@/features/teams/components/TeamStatusBadge'
+import { useAuthStore } from '@/stores/authStore'
 
 export function TeamDetailPage() {
   const { slug, teamId } = useParams<{ slug: string; teamId: string }>()
@@ -25,6 +26,22 @@ export function TeamDetailPage() {
   const tournamentId = tournament.data?.id ?? 0
   const team = useTeam(tournamentId, id)
   const roster = useRoster(id)
+
+  // Single entry point for "my team": this public view detects whether the
+  // current user manages THIS team — the owner delegate (delegate role bound to
+  // this team) or an organizer of the tournament — and surfaces a "Gestionar"
+  // shortcut instead of forcing a separate URL.
+  const roles = useAuthStore((s) => s.roles)
+  const userId = useAuthStore((s) => s.user?.id)
+  const canManage =
+    roles.some(
+      (r) =>
+        r.tournament_id === tournamentId &&
+        ((r.role === 'delegate' && r.team_id === id) ||
+          r.role === 'organizer'),
+    ) ||
+    (team.data?.delegate_user_id != null &&
+      team.data.delegate_user_id === userId)
 
   useDocumentTitle(team.data?.name)
 
@@ -76,6 +93,16 @@ export function TeamDetailPage() {
                 <TeamStatusBadge status={team.data.status} />
               </div>
             </CardHeader>
+            {canManage ? (
+              <CardContent>
+                <Button asChild size="sm">
+                  <Link to={`/t/${slug}/teams/${id}/manage`}>
+                    <Settings2 className="size-4" />
+                    Gestionar mi equipo
+                  </Link>
+                </Button>
+              </CardContent>
+            ) : null}
           </Card>
 
           <Card>
@@ -88,7 +115,7 @@ export function TeamDetailPage() {
               ) : roster.isError ? (
                 <ErrorState message="No se pudo cargar la plantilla." />
               ) : (
-                <RosterTable players={roster.data ?? []} />
+                <RosterTable players={roster.data ?? []} teamId={id} />
               )}
             </CardContent>
           </Card>

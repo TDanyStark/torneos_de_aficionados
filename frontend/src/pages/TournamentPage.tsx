@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
 import { useFollowStore } from '@/stores/followStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useMyTeam } from '@/features/teams/api/useTeams'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { cn } from '@/lib/utils'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
@@ -66,9 +67,16 @@ export function TournamentPage() {
   // Organizer of THIS tournament (per-tournament role). Gates the "Editar"
   // action so management lives behind the single public link.
   const roles = useAuthStore((s) => s.roles)
+  const isAuthenticated = useAuthStore((s) => Boolean(s.token))
   const isOrganizer = data
     ? roles.some((r) => r.tournament_id === data.id && r.role === 'organizer')
     : false
+
+  // Whether the logged-in user already enrolled a team here (as delegate). When
+  // they have one, we show "Mi equipo" (to their team) instead of "Inscribir mi
+  // equipo" — a delegate may only enroll one team per tournament.
+  const myTeam = useMyTeam(data?.id, isAuthenticated)
+  const hasMyTeam = Boolean(myTeam.data)
 
   const shareLink = async () => {
     if (!data) return
@@ -139,7 +147,14 @@ export function TournamentPage() {
       {/* Actions: inscribe a team (when open), follow, and share — all from the
           single tournament link. */}
       <div className="flex flex-wrap gap-2">
-        {data.registration_open && data.registration_code ? (
+        {hasMyTeam && myTeam.data ? (
+          <Button asChild size="sm">
+            <Link to={`/t/${data.slug}/teams/${myTeam.data.team_id}/manage`}>
+              <Users className="size-4" />
+              Mi equipo
+            </Link>
+          </Button>
+        ) : data.registration_open && data.registration_code ? (
           <Button asChild size="sm">
             <Link to={`/inscripcion/${data.id}/${data.registration_code}`}>
               <UserPlus className="size-4" />
