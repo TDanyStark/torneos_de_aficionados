@@ -6,7 +6,6 @@ namespace App\Application\Actions\Tournament;
 
 use App\Application\Action\ApiAction;
 use App\Application\Responder\JsonResponder;
-use App\Application\Service\DeleteTournamentService;
 use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Tournament\TournamentRepository;
@@ -14,19 +13,20 @@ use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
- * DELETE /api/v1/tournaments/{id}  (organizer OWNER only)
+ * PATCH /api/v1/tournaments/{id}/filed  (organizer OWNER or admin)
+ * Body: { "filed": bool }
  *
- * DESTRUCTIVE: permanently removes the tournament and EVERYTHING under it —
- * teams, rosters, matches, goals/cards, group/bracket placements, registrations,
- * per-user roles and the uploaded image files (logo, team logos, player photos).
- * Pooled players shared with other tournaments are preserved.
+ * Archives ($filed=true) or restores ($filed=false) a tournament by toggling
+ * its is_filed flag. Non-destructive and independent of status: archived
+ * tournaments simply move to the dashboard "Archivados" view.
+ *
+ * Response 200: { "tournament_id": int, "is_filed": bool }
  */
-final class DeleteTournamentAction extends ApiAction
+final class SetTournamentFiledAction extends ApiAction
 {
     public function __construct(
         JsonResponder $responder,
-        private TournamentRepository $tournaments,
-        private DeleteTournamentService $service
+        private TournamentRepository $tournaments
     ) {
         parent::__construct($responder);
     }
@@ -44,11 +44,17 @@ final class DeleteTournamentAction extends ApiAction
         }
 
         if (!$user->isAdmin && $tournament->ownerUserId !== $user->id) {
-            throw new ForbiddenException('Solo el organizador propietario puede eliminar este torneo.');
+            throw new ForbiddenException('Solo el organizador propietario puede archivar este torneo.');
         }
 
-        $this->service->delete($id);
+        $body = $this->body();
+        $filed = !empty($body['filed']);
 
-        return $this->responder->noContent($this->response);
+        $this->tournaments->setFiled($id, $filed);
+
+        return $this->responder->success($this->response, [
+            'tournament_id' => $id,
+            'is_filed'      => $filed,
+        ]);
     }
 }

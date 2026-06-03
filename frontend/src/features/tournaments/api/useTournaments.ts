@@ -132,6 +132,52 @@ export function useUpdateTournament(id: number) {
   })
 }
 
+/**
+ * Archive ($filed=true) or restore ($filed=false) a tournament from the
+ * organizer dashboard. Non-destructive: toggles is_filed on the tournament.
+ */
+export function useSetTournamentFiled() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, filed }: { id: number; filed: boolean }) =>
+      apiClient.patch<{ tournament_id: number; is_filed: boolean }>(
+        `/tournaments/${id}/filed`,
+        { filed },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: tournamentKeys.all })
+    },
+  })
+}
+
+/** Counts of what deleting a tournament would remove (for the confirm dialog). */
+export interface TournamentDeletionImpact {
+  teams: number
+  players: number
+  matches: number
+  events: number
+}
+
+/**
+ * Preview of the destructive deletion impact. Disabled until `id` is provided
+ * (e.g. only fetched when the confirm dialog opens).
+ */
+export function useTournamentDeletionImpact(id: number | undefined) {
+  return useQuery({
+    queryKey: ['tournaments', 'deletion-impact', id] as const,
+    enabled: Boolean(id),
+    queryFn: ({ signal }) =>
+      apiClient.get<{
+        tournament_id: number
+        impact: TournamentDeletionImpact
+      }>(`/tournaments/${id}/deletion-impact`, undefined, signal),
+  })
+}
+
+/**
+ * DESTRUCTIVE delete: permanently removes the tournament and everything under
+ * it (teams, rosters, matches, events, image files). Pooled players preserved.
+ */
 export function useDeleteTournament() {
   const qc = useQueryClient()
   return useMutation({

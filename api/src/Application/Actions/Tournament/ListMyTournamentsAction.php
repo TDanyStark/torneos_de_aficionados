@@ -14,6 +14,9 @@ use Psr\Http\Message\ResponseInterface as Response;
  * GET /api/v1/tournaments/mine  (auth required)
  * Full tournament entities owned by the authenticated user. Replaces a fragile
  * per-id fetch loop on the client. Plain array, newest first.
+ *
+ * `?archivados=1` returns ONLY the archived (is_filed=1) tournaments — the
+ * dashboard "Archivados" view. The default returns only active ones.
  */
 final class ListMyTournamentsAction extends ApiAction
 {
@@ -29,7 +32,10 @@ final class ListMyTournamentsAction extends ApiAction
         /** @var User $user */
         $user = $this->request->getAttribute('user');
 
-        $items = $this->tournaments->findByOwner($user->id);
+        $params = $this->request->getQueryParams();
+        $filedOnly = !empty($params['archivados']);
+
+        $items = $this->tournaments->findByOwner($user->id, $filedOnly);
 
         return $this->responder->success($this->response, $items);
     }

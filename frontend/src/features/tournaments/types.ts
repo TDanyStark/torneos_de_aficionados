@@ -63,6 +63,8 @@ export interface Tournament {
   status: TournamentStatus
   /** Visibility: true = listed publicly in /torneos; false = link-only (default). */
   is_public: boolean
+  /** Archive flag (organizer dashboard). true = archived (hidden from active list). */
+  is_filed: boolean
   periods_count: number
   points_win: number
   points_draw: number

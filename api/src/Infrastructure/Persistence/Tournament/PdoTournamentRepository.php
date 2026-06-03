@@ -40,11 +40,14 @@ final class PdoTournamentRepository implements TournamentRepository
     /**
      * @return array<int,Tournament>
      */
-    public function findByOwner(int $userId): array
+    public function findByOwner(int $userId, bool $filedOnly = false): array
     {
+        $filedClause = $filedOnly ? 'is_filed = 1' : 'is_filed = 0';
+
         $stmt = $this->pdo->prepare(
             'SELECT * FROM tournaments
              WHERE owner_user_id = :owner_user_id AND deleted_at IS NULL
+               AND ' . $filedClause . '
              ORDER BY updated_at DESC'
         );
         $stmt->execute(['owner_user_id' => $userId]);
@@ -278,6 +281,15 @@ final class PdoTournamentRepository implements TournamentRepository
             'UPDATE tournaments SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute(['id' => $id]);
+    }
+
+    public function setFiled(int $id, bool $filed): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tournaments SET is_filed = :filed, updated_at = NOW()
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+        $stmt->execute(['id' => $id, 'filed' => $filed ? 1 : 0]);
     }
 
     /**

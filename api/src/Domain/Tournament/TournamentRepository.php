@@ -18,9 +18,13 @@ interface TournamentRepository
     /**
      * Full tournament entities owned by a user, newest first.
      *
+     * By default ($filedOnly=false) archived tournaments (is_filed=1) are
+     * excluded. Pass $filedOnly=true to return ONLY the archived ones (the
+     * dashboard "Archivados" view).
+     *
      * @return array<int,Tournament>
      */
-    public function findByOwner(int $userId): array;
+    public function findByOwner(int $userId, bool $filedOnly = false): array;
 
     public function findByRegistrationCode(string $code): ?Tournament;
 
@@ -66,4 +70,10 @@ interface TournamentRepository
     public function update(int $id, array $data): Tournament;
 
     public function softDelete(int $id): void;
+
+    /**
+     * Archive ($filed=true) or restore ($filed=false) a tournament by toggling
+     * its is_filed flag. Independent of status and soft-delete.
+     */
+    public function setFiled(int $id, bool $filed): void;
 }

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, EyeOff, Heart, RotateCcw } from 'lucide-react'
+import { Archive, ArchiveRestore, Heart, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Card,
@@ -21,6 +21,7 @@ import {
 } from '@/features/tournaments/api/useTournaments'
 import { useFollowStore } from '@/stores/followStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useArchivedFilter } from '@/features/tournaments/hooks/useArchivedFilter'
 import type { TournamentStatus } from '@/features/tournaments/types'
 
 type Relation = 'organizer' | 'delegate' | 'following'
@@ -54,13 +55,15 @@ const RELATION_VARIANT: Record<
 /**
  * "Torneos que sigo": combined list of tournaments the user relates to — as
  * organizer or delegate (backend) and as a visitor/player following from the
- * public link (localStorage). Member tournaments can be hidden from the feed
- * (non-destructive) and restored from the "Ver ocultos" view.
+ * public link (localStorage). Member tournaments can be archived from the feed
+ * (non-destructive) and restored from the "Ver archivados" view, which is
+ * driven by the URL (?archivados=1) so it's shareable and back/forward-aware.
  */
 export function FollowedTournamentsPage() {
   const token = useAuthStore((s) => s.token)
   const isAuthed = Boolean(token)
-  const [showHidden, setShowHidden] = useState(false)
+  const { archived: showHidden, setArchived: setShowHidden } =
+    useArchivedFilter()
 
   const visible = useFollowedTournaments(isAuthed, false)
   const hidden = useFollowedTournaments(isAuthed && showHidden, true)
@@ -127,9 +130,9 @@ export function FollowedTournamentsPage() {
       // Also drop any local "follow" so the row truly leaves the active feed
       // (the merge would otherwise keep it via localStorage).
       unfollow(id)
-      toast.success('Torneo ocultado de tu lista')
+      toast.success('Torneo archivado de tu lista')
     } catch {
-      toast.error('No se pudo ocultar el torneo')
+      toast.error('No se pudo archivar el torneo')
     }
   }
 
@@ -155,17 +158,17 @@ export function FollowedTournamentsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowHidden((v) => !v)}
+            onClick={() => setShowHidden(!showHidden)}
           >
             {showHidden ? (
               <>
-                <Eye className="size-4" />
+                <ArchiveRestore className="size-4" />
                 Ver activos
               </>
             ) : (
               <>
-                <EyeOff className="size-4" />
-                Ver ocultos
+                <Archive className="size-4" />
+                Ver archivados
               </>
             )}
           </Button>
@@ -173,7 +176,7 @@ export function FollowedTournamentsPage() {
       </div>
       <p className="text-muted-foreground text-sm">
         Torneos donde eres organizador o delegado, y los que sigues desde su
-        enlace. Puedes ocultar los que ya pasaron para no agobiarte; siempre
+        enlace. Puedes archivar los que ya pasaron para no agobiarte; siempre
         podrás verlos y restaurarlos.
       </p>
 
@@ -189,8 +192,8 @@ export function FollowedTournamentsPage() {
           <ErrorState message={hidden.error?.message} />
         ) : hiddenRows.length === 0 ? (
           <EmptyState
-            title="No tienes torneos ocultos"
-            description="Cuando ocultes un torneo de tu lista, aparecerá aquí para restaurarlo."
+            title="No tienes torneos archivados"
+            description="Cuando archives un torneo de tu lista, aparecerá aquí para restaurarlo."
           />
         ) : (
           <div className="space-y-3">
@@ -297,8 +300,8 @@ export function FollowedTournamentsPage() {
                       disabled={setVisibility.isPending}
                       onClick={() => onHide(row.id)}
                     >
-                      <EyeOff className="size-4" />
-                      Ocultar de mi lista
+                      <Archive className="size-4" />
+                      Archivar de mi lista
                     </Button>
                   ) : null}
                   {row.relations.includes('following') ? (

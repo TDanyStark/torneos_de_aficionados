@@ -14,14 +14,13 @@ use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
- * DELETE /api/v1/tournaments/{id}  (organizer OWNER only)
+ * GET /api/v1/tournaments/{id}/deletion-impact  (organizer OWNER or admin)
  *
- * DESTRUCTIVE: permanently removes the tournament and EVERYTHING under it —
- * teams, rosters, matches, goals/cards, group/bracket placements, registrations,
- * per-user roles and the uploaded image files (logo, team logos, player photos).
- * Pooled players shared with other tournaments are preserved.
+ * Returns counts of what deleting this tournament would remove (teams, players,
+ * matches, events) so the UI can warn the organizer before they confirm an
+ * irreversible, destructive deletion.
  */
-final class DeleteTournamentAction extends ApiAction
+final class TournamentDeletionImpactAction extends ApiAction
 {
     public function __construct(
         JsonResponder $responder,
@@ -47,8 +46,11 @@ final class DeleteTournamentAction extends ApiAction
             throw new ForbiddenException('Solo el organizador propietario puede eliminar este torneo.');
         }
 
-        $this->service->delete($id);
+        $impact = $this->service->impact($id);
 
-        return $this->responder->noContent($this->response);
+        return $this->responder->success($this->response, [
+            'tournament_id' => $id,
+            'impact'        => $impact,
+        ]);
     }
 }

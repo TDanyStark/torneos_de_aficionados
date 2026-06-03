@@ -88,9 +88,11 @@ use App\Application\Actions\Tournament\ListFollowedTournamentsAction;
 use App\Application\Actions\Tournament\SetFollowedVisibilityAction;
 use App\Application\Actions\Tournament\ListMyTournamentsAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
+use App\Application\Actions\Tournament\SetTournamentFiledAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
 use App\Application\Actions\Tournament\ShowTournamentByIdAction;
 use App\Application\Actions\Tournament\ShowTournamentBySlugAction;
+use App\Application\Actions\Tournament\TournamentDeletionImpactAction;
 use App\Application\Actions\Tournament\UpdateTournamentAction;
 use App\Application\Actions\Tournament\UploadTournamentLogoAction;
 use App\Application\Middleware\AdminMiddleware;
@@ -175,7 +177,15 @@ return function (App $app) {
             // Owner-only update/delete (ownership checked inside the action).
             $tournaments->put('/{id}', UpdateTournamentAction::class)
                 ->add(JwtAuthMiddleware::class);
+            // DELETE is DESTRUCTIVE: cascades teams, matches, rosters, files.
             $tournaments->delete('/{id}', DeleteTournamentAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Archive/restore (toggle is_filed) and deletion impact preview.
+            // Numeric {id} keeps them clear of the public `/{slug}` route.
+            $tournaments->patch('/{id:[0-9]+}/filed', SetTournamentFiledAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $tournaments->get('/{id:[0-9]+}/deletion-impact', TournamentDeletionImpactAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Logo upload (owner|admin, multipart). Numeric {id} constraint keeps
