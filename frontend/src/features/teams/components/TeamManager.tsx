@@ -1,15 +1,30 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Lock } from 'lucide-react'
+import { Lock, Trash2, UserPlus } from 'lucide-react'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ErrorState } from '@/components/shared/StateMessage'
 import { useAuthStore } from '@/stores/authStore'
-import { useTeam } from '../api/useTeams'
+import {
+  useTeam,
+  useTeamDeletionImpact,
+  useDeleteTeam,
+} from '../api/useTeams'
 import {
   useRoster,
   useDeleteTeamPlayer,
@@ -25,6 +40,8 @@ interface TeamManagerProps {
   rosterLimit?: number | null
   /** Whether registrations are still open (gates delegate edits). */
   registrationOpen?: boolean
+  /** Tournament slug, used to redirect to the teams panel after deletion. */
+  tournamentSlug?: string
 }
 
 /** Organizer/delegate management surface: edit team + roster CRUD. */
@@ -33,11 +50,17 @@ export function TeamManager({
   teamId,
   rosterLimit = null,
   registrationOpen = true,
+  tournamentSlug,
 }: TeamManagerProps) {
+  const navigate = useNavigate()
   const teamQuery = useTeam(tournamentId, teamId)
   const roster = useRoster(teamId)
   const deleteTeamPlayer = useDeleteTeamPlayer(teamId)
+  const deleteTeam = useDeleteTeam()
   const [removingId, setRemovingId] = useState<number | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const deletionImpact = useTeamDeletionImpact(teamId, confirmDeleteOpen)
 
   // Per-tournament organizer role. Organizers moderate players (reject/re-accept);
   // both organizer and the owner delegate can edit roster data + photos.
@@ -52,6 +75,7 @@ export function TeamManager({
   const canEdit = isOrganizer || registrationOpen
 
   const currentCount = roster.data?.length ?? 0
+  const isRosterFull = rosterLimit != null && currentCount >= rosterLimit
 
   const onRemovePlayer = async (teamPlayerId: number) => {
     setRemovingId(teamPlayerId)
@@ -64,6 +88,28 @@ export function TeamManager({
       setRemovingId(null)
     }
   }
+
+  const onDeleteTeam = async () => {
+    try {
+      await deleteTeam.mutateAsync(teamId)
+      toast.success('Equipo eliminado')
+      setConfirmDeleteOpen(false)
+      if (tournamentSlug) {
+        navigate(`/t/${tournamentSlug}?tab=equipos`)
+      }
+    } catch {
+      toast.error('No se pudo eliminar el equipo')
+    }
+  }
+
+  // Human-readable summary of what deletion will destroy. Loaded lazily when the
+  // confirm dialog opens; until then we show a neutral placeholder.
+  const impact = deletionImpact.data?.impact
+  const deletionDescription = deletionImpact.isLoading
+    ? 'Calculando lo que se eliminará…'
+    : impact
+      ? buildDeletionWarning(impact)
+      : 'Se eliminará el equipo y toda su información asociada. Esta acción no se puede deshacer.'
 
   if (teamQuery.isError) {
     return <ErrorState message="No se pudo cargar el equipo." />
@@ -96,17 +142,39 @@ export function TeamManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Plantilla</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle>Plantilla</CardTitle>
+            {canEdit ? (
+              <Dialog open={addOpen} onOpenChange={setAddOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" disabled={isRosterFull}>
+                    <UserPlus className="size-4" />
+                    {isRosterFull
+                      ? `Plantilla llena (${currentCount}/${rosterLimit})`
+                      : 'Agregar jugador'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Agregar jugador</DialogTitle>
+                    <DialogDescription>
+                      Busca por cédula para reutilizar un jugador existente o
+                      registra uno nuevo.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AddPlayerForm
+                    tournamentId={tournamentId}
+                    teamId={teamId}
+                    rosterLimit={rosterLimit}
+                    currentCount={currentCount}
+                    onSuccess={() => setAddOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {canEdit ? (
-            <AddPlayerForm
-              tournamentId={tournamentId}
-              teamId={teamId}
-              rosterLimit={rosterLimit}
-              currentCount={currentCount}
-            />
-          ) : null}
           {roster.isLoading ? (
             <p className="text-muted-foreground text-sm">Cargando plantilla…</p>
           ) : roster.isError ? (
@@ -124,6 +192,77 @@ export function TeamManager({
           )}
         </CardContent>
       </Card>
+
+      {/* Danger zone — organizer only. Deleting purges matches + goals. */}
+      {isOrganizer ? (
+        <Card className="border-destructive/40">
+          <CardHeader>
+            <CardTitle className="text-destructive">Zona de peligro</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              Eliminar el equipo lo quita del torneo junto con sus partidos,
+              goleadores y demás datos asociados. Esta acción no se puede
+              deshacer.
+            </p>
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmDeleteOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Eliminar equipo
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="¿Eliminar este equipo?"
+        description={deletionDescription}
+        confirmLabel="Sí, eliminar equipo"
+        cancelLabel="Cancelar"
+        destructive
+        loading={deleteTeam.isPending}
+        onConfirm={onDeleteTeam}
+      />
     </div>
   )
+}
+
+/**
+ * Builds the destructive-action warning sentence from the deletion impact
+ * counts so the organizer knows exactly what will be removed.
+ */
+function buildDeletionWarning(impact: {
+  players: number
+  matches: number
+  goals: number
+}): string {
+  const parts: string[] = []
+  if (impact.matches > 0) {
+    parts.push(
+      `${impact.matches} ${impact.matches === 1 ? 'partido' : 'partidos'}`,
+    )
+  }
+  if (impact.goals > 0) {
+    parts.push(`${impact.goals} ${impact.goals === 1 ? 'gol' : 'goles'}`)
+  }
+  if (impact.players > 0) {
+    parts.push(
+      `${impact.players} ${impact.players === 1 ? 'jugador' : 'jugadores'} en la plantilla`,
+    )
+  }
+
+  if (parts.length === 0) {
+    return 'Se eliminará el equipo. No tiene partidos ni goles registrados. Esta acción no se puede deshacer.'
+  }
+
+  const list =
+    parts.length === 1
+      ? parts[0]
+      : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`
+
+  return `Se eliminarán también ${list}. Esta acción no se puede deshacer.`
 }

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useForm, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Settings, Users } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { AdminTeamsPanel } from '@/features/teams/components/AdminTeamsPanel'
 import {
   Card,
   CardContent,

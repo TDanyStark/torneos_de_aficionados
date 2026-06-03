@@ -28,16 +28,21 @@ export function TeamCard({ team, tournamentSlug, tournamentId }: TeamCardProps) 
   // the management surface ("my team" is a single place).
   const roles = useAuthStore((s) => s.roles)
   const userId = useAuthStore((s) => s.user?.id)
+  const isOrganizer = roles.some(
+    (r) => r.tournament_id === tournamentId && r.role === 'organizer',
+  )
+  // "Mi equipo" is a DELEGATE-only concept. Organizers are never a team's
+  // delegate, so the badge never shows for them (even if a legacy
+  // delegate_user_id points at them). They still manage teams via isOrganizer.
   const isMyTeam =
-    roles.some(
+    !isOrganizer &&
+    (roles.some(
       (r) =>
         r.tournament_id === tournamentId &&
         r.role === 'delegate' &&
         r.team_id === team.id,
-    ) || (team.delegate_user_id != null && team.delegate_user_id === userId)
-  const isOrganizer = roles.some(
-    (r) => r.tournament_id === tournamentId && r.role === 'organizer',
-  )
+    ) ||
+      (team.delegate_user_id != null && team.delegate_user_id === userId))
   const canManage = isMyTeam || isOrganizer
 
   return (

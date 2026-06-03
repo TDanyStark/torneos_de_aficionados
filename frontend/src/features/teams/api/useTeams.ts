@@ -9,6 +9,7 @@ import type {
   CreateTeamPayload,
   MyTeamInTournament,
   Team,
+  TeamDeletionImpact,
   TeamFilters,
   UpdateTeamPayload,
   UploadTeamLogoResponse,
@@ -19,6 +20,8 @@ export const teamKeys = {
   list: (tournamentId: number, filters: TeamFilters) =>
     ['teams', 'list', tournamentId, filters] as const,
   detail: (teamId: number) => ['teams', 'detail', teamId] as const,
+  deletionImpact: (teamId: number) =>
+    ['teams', 'deletion-impact', teamId] as const,
 }
 
 /** Public, paginated team list for a tournament with URL-driven filters. */
@@ -87,13 +90,35 @@ export function useUpdateTeam(teamId: number) {
   })
 }
 
+/**
+ * Deletion-impact preview (organizer only): how many matches, goals and roster
+ * players removing this team would destroy. Only fetched when `enabled`, so the
+ * request fires when the confirm dialog opens, not on mount.
+ */
+export function useTeamDeletionImpact(teamId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: teamKeys.deletionImpact(teamId),
+    enabled: enabled && Number.isFinite(teamId) && teamId > 0,
+    queryFn: ({ signal }) =>
+      apiClient.get<TeamDeletionImpact>(
+        `/tournament-teams/${teamId}/deletion-impact`,
+        undefined,
+        signal,
+      ),
+  })
+}
+
 export function useDeleteTeam() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (teamId: number) =>
       apiClient.delete(`/tournament-teams/${teamId}`),
     onSuccess: () => {
+      // Deleting a team purges its matches + events, so fixtures and derived
+      // standings must refetch alongside the team lists.
       qc.invalidateQueries({ queryKey: teamKeys.all })
+      qc.invalidateQueries({ queryKey: ['matches'] })
+      qc.invalidateQueries({ queryKey: ['standings'] })
     },
   })
 }

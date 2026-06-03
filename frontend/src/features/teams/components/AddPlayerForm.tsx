@@ -31,6 +31,8 @@ interface AddPlayerFormProps {
   rosterLimit: number | null
   /** Current number of players on the roster. */
   currentCount: number
+  /** Called after a player is successfully added (e.g. to close a dialog). */
+  onSuccess?: () => void
 }
 
 const KNOWN_FIELDS = [
@@ -54,6 +56,7 @@ export function AddPlayerForm({
   teamId,
   rosterLimit,
   currentCount,
+  onSuccess,
 }: AddPlayerFormProps) {
   const addPlayer = useAddPlayer(teamId)
 
@@ -113,6 +116,7 @@ export function AddPlayerForm({
       })
       toast.success('Jugador agregado a la plantilla')
       form.reset(DEFAULT_ADD_PLAYER_FORM)
+      onSuccess?.()
     } catch (error) {
       // 422 dup shirt maps to the shirt_number field.
       applyApiError(error, form.setError, KNOWN_FIELDS)

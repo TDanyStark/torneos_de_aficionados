@@ -14,13 +14,13 @@ use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
- * DELETE /api/v1/tournament-teams/{id}  (organizer only)
- * {id} is the team id -> tournament resolved via the team for the inline check.
+ * GET /api/v1/tournament-teams/{id}/deletion-impact  (organizer only)
  *
- * Purges the team's matches, match events (goals/cards), group placements and
- * roster entries, then soft-deletes the team. Pooled players are preserved.
+ * Returns counts of what deleting this team would remove (matches, goals,
+ * roster players, group placements) so the UI can warn the organizer before
+ * they confirm a destructive, irreversible deletion.
  */
-final class DeleteTeamAction extends ApiAction
+final class TeamDeletionImpactAction extends ApiAction
 {
     public function __construct(
         JsonResponder $responder,
@@ -45,8 +45,12 @@ final class DeleteTeamAction extends ApiAction
 
         $this->authorizer->assert($user, $team->tournamentId, ['organizer']);
 
-        $this->service->delete($id);
+        $impact = $this->service->impact($id);
 
-        return $this->responder->noContent($this->response);
+        return $this->responder->success($this->response, [
+            'team_id' => $id,
+            'status'  => $team->status,
+            'impact'  => $impact,
+        ]);
     }
 }

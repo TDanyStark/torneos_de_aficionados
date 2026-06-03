@@ -74,13 +74,38 @@ export function useTournamentBySlug(slug: string | undefined) {
  * Tournaments where the logged-in user is organizer or delegate, annotated with
  * `my_roles`. Backs the "Torneos que sigo" view (merged with localStorage
  * follows). Disabled when there's no session.
+ *
+ * `includeHidden=true` returns ONLY the tournaments the user has hidden (the
+ * "Ver ocultos" view); the default returns the visible ones.
  */
-export function useFollowedTournaments(enabled: boolean) {
+export function useFollowedTournaments(enabled: boolean, includeHidden = false) {
   return useQuery({
-    queryKey: ['tournaments', 'followed-mine'] as const,
+    queryKey: ['tournaments', 'followed-mine', includeHidden] as const,
     enabled,
     queryFn: ({ signal }) =>
-      apiClient.get<FollowedTournament[]>('/me/tournaments', undefined, signal),
+      apiClient.get<FollowedTournament[]>(
+        '/me/tournaments',
+        includeHidden ? { include_hidden: '1' } : undefined,
+        signal,
+      ),
+  })
+}
+
+/**
+ * Hide ($hidden=true) or restore a tournament from the user's "Torneos que
+ * sigo" feed. Non-destructive: toggles hidden_at on the user's role rows.
+ */
+export function useSetFollowedVisibility() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, hidden }: { id: number; hidden: boolean }) =>
+      apiClient.patch<{ tournament_id: number; hidden: boolean }>(
+        `/me/tournaments/${id}/visibility`,
+        { hidden },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tournaments', 'followed-mine'] })
+    },
   })
 }
 

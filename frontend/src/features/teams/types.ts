@@ -35,6 +35,19 @@ export type UpdateTeamPayload = Partial<CreateTeamPayload> & {
   status?: TeamStatus
 }
 
+/** Counts of what deleting a team would remove, for the warning dialog. */
+export interface TeamDeletionImpact {
+  team_id: number
+  status: TeamStatus
+  impact: {
+    players: number
+    matches: number
+    events: number
+    goals: number
+    groups: number
+  }
+}
+
 /** URL-driven team list filters. */
 export interface TeamFilters {
   page: number

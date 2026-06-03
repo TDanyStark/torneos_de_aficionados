@@ -72,6 +72,7 @@ use App\Application\Actions\Stage\ListStagesAction;
 use App\Application\Actions\Stage\UpdateStageAction;
 use App\Application\Actions\Team\CreateTeamAction;
 use App\Application\Actions\Team\DeleteTeamAction;
+use App\Application\Actions\Team\TeamDeletionImpactAction;
 use App\Application\Actions\Team\ListTeamsAction;
 use App\Application\Actions\Team\ShowMyTeamInTournamentAction;
 use App\Application\Actions\Team\UpdateTeamAction;
@@ -84,6 +85,7 @@ use App\Application\Actions\TeamPlayer\UploadTeamPlayerPhotoAction;
 use App\Application\Actions\Tournament\CreateTournamentAction;
 use App\Application\Actions\Tournament\DeleteTournamentAction;
 use App\Application\Actions\Tournament\ListFollowedTournamentsAction;
+use App\Application\Actions\Tournament\SetFollowedVisibilityAction;
 use App\Application\Actions\Tournament\ListMyTournamentsAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
@@ -138,6 +140,9 @@ return function (App $app) {
             // delegate, each annotated with my_roles. Visitor/player follows are
             // localStorage-only on the client and merged there.
             $me->get('/tournaments', ListFollowedTournamentsAction::class)
+                ->add(JwtAuthMiddleware::class);
+            // Hide/restore a tournament from the user's feed (non-destructive).
+            $me->patch('/tournaments/{id}/visibility', SetFollowedVisibilityAction::class)
                 ->add(JwtAuthMiddleware::class);
         });
 
@@ -345,6 +350,11 @@ return function (App $app) {
             $teams->put('/{id}', UpdateTeamAction::class)
                 ->add(JwtAuthMiddleware::class);
             $teams->delete('/{id}', DeleteTeamAction::class)
+                ->add(JwtAuthMiddleware::class);
+
+            // Deletion impact preview (organizer only): counts of matches,
+            // goals and roster players that would be removed.
+            $teams->get('/{id:[0-9]+}/deletion-impact', TeamDeletionImpactAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             // Team logo upload in management (organizer|owner delegate, multipart).

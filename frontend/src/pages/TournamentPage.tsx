@@ -72,11 +72,15 @@ export function TournamentPage() {
     ? roles.some((r) => r.tournament_id === data.id && r.role === 'organizer')
     : false
 
-  // Whether the logged-in user already enrolled a team here (as delegate). When
-  // they have one, we show "Mi equipo" (to their team) instead of "Inscribir mi
-  // equipo" — a delegate may only enroll one team per tournament.
-  const myTeam = useMyTeam(data?.id, isAuthenticated)
-  const hasMyTeam = Boolean(myTeam.data)
+  // "Mi equipo" is a DELEGATE concept only — organizers never own a team. Show
+  // it only when the user holds a delegate role here and has an enrolled team.
+  // (Querying is skipped for organizers so a legacy delegate_user_id never
+  // surfaces a phantom "Mi equipo" for them.)
+  const isDelegate = data
+    ? roles.some((r) => r.tournament_id === data.id && r.role === 'delegate')
+    : false
+  const myTeam = useMyTeam(data?.id, isAuthenticated && isDelegate && !isOrganizer)
+  const hasMyTeam = isDelegate && !isOrganizer && Boolean(myTeam.data)
 
   const shareLink = async () => {
     if (!data) return
@@ -145,9 +149,11 @@ export function TournamentPage() {
       </div>
 
       {/* Actions: inscribe a team (when open), follow, and share — all from the
-          single tournament link. */}
+          single tournament link. The organizer owns everything and is never a
+          team delegate, so neither "Mi equipo" nor "Inscribir mi equipo" apply
+          to them (they manage teams from the organizer panel). */}
       <div className="flex flex-wrap gap-2">
-        {hasMyTeam && myTeam.data ? (
+        {isOrganizer ? null : hasMyTeam && myTeam.data ? (
           <Button asChild size="sm">
             <Link to={`/t/${data.slug}/teams/${myTeam.data.team_id}/manage`}>
               <Users className="size-4" />
@@ -162,23 +168,25 @@ export function TournamentPage() {
             </Link>
           </Button>
         ) : null}
-        <Button
-          variant={isFollowing ? 'default' : 'outline'}
-          size="sm"
-          onClick={() =>
-            toggleFollow({
-              id: data.id,
-              slug: data.slug,
-              name: data.name,
-              logo_url: data.logo_url,
-            })
-          }
-        >
-          <Heart
-            className={cn('size-4', isFollowing && 'fill-current')}
-          />
-          {isFollowing ? 'Siguiendo' : 'Seguir'}
-        </Button>
+        {/* "Seguir" is for visitors/players. The organizer already owns the
+            tournament (it shows in their feed by membership), so hide it. */}
+        {isOrganizer ? null : (
+          <Button
+            variant={isFollowing ? 'default' : 'outline'}
+            size="sm"
+            onClick={() =>
+              toggleFollow({
+                id: data.id,
+                slug: data.slug,
+                name: data.name,
+                logo_url: data.logo_url,
+              })
+            }
+          >
+            <Heart className={cn('size-4', isFollowing && 'fill-current')} />
+            {isFollowing ? 'Siguiendo' : 'Seguir'}
+          </Button>
+        )}
         <Button variant="outline" size="sm" onClick={shareLink}>
           <Share2 className="size-4" />
           Compartir
