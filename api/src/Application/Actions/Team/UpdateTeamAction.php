@@ -11,13 +11,15 @@ use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Shared\Exception\ValidationException;
 use App\Domain\Team\TeamRepository;
+use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * PUT /api/v1/tournament-teams/{id}  (organizer OR delegate owner)
  * {id} is the team id -> authorized inline. Organizers may edit any team in
- * their tournament; the delegate may only edit the team they own.
+ * their tournament; the delegate may only edit the team they own — and only
+ * while registrations are open.
  */
 final class UpdateTeamAction extends ApiAction
 {
@@ -26,6 +28,7 @@ final class UpdateTeamAction extends ApiAction
     public function __construct(
         JsonResponder $responder,
         private TeamRepository $teams,
+        private TournamentRepository $tournaments,
         private TournamentAuthorizer $authorizer
     ) {
         parent::__construct($responder);
@@ -49,6 +52,16 @@ final class UpdateTeamAction extends ApiAction
 
         if (!$user->isAdmin && !$isOrganizer && !$isOwnerDelegate) {
             throw new ForbiddenException('No tienes permiso para editar este equipo.');
+        }
+
+        // Once registrations close, the delegate can no longer edit team data;
+        // only the organizer (or admin) may. Status changes are organizer-only
+        // anyway (checked below), so this lock targets delegate edits.
+        if (!$user->isAdmin && !$isOrganizer) {
+            $tournament = $this->tournaments->findById($team->tournamentId);
+            if ($tournament !== null && !$tournament->registrationOpen) {
+                throw new ForbiddenException('Las inscripciones están cerradas. Solo el organizador puede editar el equipo.');
+            }
         }
 
         $body = $this->body();

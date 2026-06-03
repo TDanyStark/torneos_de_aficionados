@@ -22,6 +22,9 @@ use Psr\Http\Message\ResponseInterface as Response;
  * Followed-as-visitor/player tournaments are tracked client-side in
  * localStorage and merged by the frontend; they are NOT returned here.
  *
+ * Query: ?include_hidden=1 returns ONLY the tournaments the user has hidden
+ * (the "Ver ocultos" view). Default omits hidden tournaments.
+ *
  * Response 200: [ { ...tournament, my_roles: ["organizer"|"delegate", ...] } ]
  */
 final class ListFollowedTournamentsAction extends ApiAction
@@ -42,7 +45,15 @@ final class ListFollowedTournamentsAction extends ApiAction
         /** @var User $user */
         $user = $this->request->getAttribute('user');
 
-        $tournaments = $this->tournaments->findByMemberRoles($user->id, self::MEMBER_ROLES);
+        $params = $this->request->getQueryParams();
+        $includeHidden = isset($params['include_hidden'])
+            && in_array((string) $params['include_hidden'], ['1', 'true'], true);
+
+        $tournaments = $this->tournaments->findByMemberRoles(
+            $user->id,
+            self::MEMBER_ROLES,
+            $includeHidden,
+        );
 
         // Build a tournament_id -> distinct role values map for the user.
         $roleRows = $this->roles->findByUser($user->id);

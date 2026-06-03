@@ -46,6 +46,7 @@ export function EquiposPanel({ tournament }: EquiposPanelProps) {
                 key={team.id}
                 team={team}
                 tournamentSlug={tournament.slug}
+                tournamentId={tournament.id}
               />
             ))}
           </div>

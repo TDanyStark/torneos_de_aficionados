@@ -138,4 +138,20 @@ final class PdoTournamentUserRoleRepository implements TournamentUserRoleReposit
         $stmt = $this->pdo->prepare('DELETE FROM tournament_user_roles WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
+
+    public function setHidden(int $tournamentId, int $userId, bool $hide): int
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tournament_user_roles
+             SET hidden_at = :hidden_at, updated_at = NOW()
+             WHERE tournament_id = :tournament_id AND user_id = :user_id'
+        );
+        $stmt->execute([
+            'hidden_at'     => $hide ? date('Y-m-d H:i:s') : null,
+            'tournament_id' => $tournamentId,
+            'user_id'       => $userId,
+        ]);
+
+        return $stmt->rowCount();
+    }
 }

@@ -1,5 +1,5 @@
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Settings2, Shield } from 'lucide-react'
+import { Link, Navigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Shield } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -49,6 +49,12 @@ export function TeamDetailPage() {
     return <ErrorState message="Equipo no encontrado." />
   }
 
+  // Single place for "my team": a manager (owner delegate or organizer) is sent
+  // straight to the management surface instead of the public roster view.
+  if (canManage) {
+    return <Navigate to={`/t/${slug}/teams/${id}/manage`} replace />
+  }
+
   const loading = tournament.isLoading || team.isLoading
 
   return (
@@ -93,16 +99,6 @@ export function TeamDetailPage() {
                 <TeamStatusBadge status={team.data.status} />
               </div>
             </CardHeader>
-            {canManage ? (
-              <CardContent>
-                <Button asChild size="sm">
-                  <Link to={`/t/${slug}/teams/${id}/manage`}>
-                    <Settings2 className="size-4" />
-                    Gestionar mi equipo
-                  </Link>
-                </Button>
-              </CardContent>
-            ) : null}
           </Card>
 
           <Card>

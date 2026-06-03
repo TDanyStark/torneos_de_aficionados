@@ -8,6 +8,7 @@ use App\Application\Action\ApiAction;
 use App\Application\Authorization\TournamentAuthorizer;
 use App\Application\Responder\JsonResponder;
 use App\Domain\Player\PlayerRepository;
+use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Shared\Exception\ValidationException;
 use App\Domain\Team\TeamRepository;
@@ -55,6 +56,14 @@ final class AddPlayerToTeamAction extends ApiAction
         if ($tournament === null) {
             throw new NotFoundException('Torneo no encontrado.');
         }
+
+        // Once registrations close, only the organizer (or admin) may change the
+        // roster. Delegates are locked out of adding players.
+        $isOrganizer = $this->userHasRole($user, $team->tournamentId, 'organizer');
+        if (!$user->isAdmin && !$isOrganizer && !$tournament->registrationOpen) {
+            throw new ForbiddenException('Las inscripciones están cerradas. Solo el organizador puede modificar la plantilla.');
+        }
+
         $organizerUserId = $tournament->ownerUserId;
 
         $body = $this->body();
@@ -135,5 +144,16 @@ final class AddPlayerToTeamAction extends ApiAction
         ]);
 
         return $this->responder->created($this->response, $teamPlayer);
+    }
+
+    private function userHasRole(User $user, int $tournamentId, string $role): bool
+    {
+        try {
+            $this->authorizer->assert($user, $tournamentId, [$role]);
+
+            return true;
+        } catch (ForbiddenException) {
+            return false;
+        }
     }
 }

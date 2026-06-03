@@ -12,6 +12,7 @@ use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Shared\Exception\ValidationException;
 use App\Domain\Team\TeamRepository;
+use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\UploadedFileInterface;
@@ -33,6 +34,7 @@ final class UploadTeamLogoAction extends ApiAction
     public function __construct(
         JsonResponder $responder,
         private TeamRepository $teams,
+        private TournamentRepository $tournaments,
         private TournamentAuthorizer $authorizer,
         private ImageUploadService $images
     ) {
@@ -56,6 +58,14 @@ final class UploadTeamLogoAction extends ApiAction
         $isOwnerDelegate = $team->delegateUserId !== null && $team->delegateUserId === $user->id;
         if (!$user->isAdmin && !$isOrganizer && !$isOwnerDelegate) {
             throw new ForbiddenException('No tienes permiso para editar este equipo.');
+        }
+
+        // Delegates cannot change the logo once registrations close.
+        if (!$user->isAdmin && !$isOrganizer) {
+            $tournament = $this->tournaments->findById($team->tournamentId);
+            if ($tournament !== null && !$tournament->registrationOpen) {
+                throw new ForbiddenException('Las inscripciones están cerradas. Solo el organizador puede editar el equipo.');
+            }
         }
 
         $files = $this->request->getUploadedFiles();

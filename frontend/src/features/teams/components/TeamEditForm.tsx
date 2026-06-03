@@ -19,7 +19,13 @@ import type { Team } from '../types'
 
 const KNOWN_FIELDS = ['name', 'short_name', 'logo_url', 'coach_name'] as const
 
-export function TeamEditForm({ team }: { team: Team }) {
+export function TeamEditForm({
+  team,
+  readOnly = false,
+}: {
+  team: Team
+  readOnly?: boolean
+}) {
   const updateTeam = useUpdateTeam(team.id)
   const uploadLogo = useUploadTeamLogo(team.id)
 
@@ -60,7 +66,7 @@ export function TeamEditForm({ team }: { team: Team }) {
             <FormItem className="sm:col-span-2">
               <FormLabel>Nombre del equipo</FormLabel>
               <FormControl>
-                <Input placeholder="Nombre" {...field} />
+                <Input placeholder="Nombre" readOnly={readOnly} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -73,7 +79,12 @@ export function TeamEditForm({ team }: { team: Team }) {
             <FormItem>
               <FormLabel>Abreviatura</FormLabel>
               <FormControl>
-                <Input placeholder="Máx. 3" maxLength={3} {...field} />
+                <Input
+                  placeholder="Máx. 3"
+                  maxLength={3}
+                  readOnly={readOnly}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,6 +100,7 @@ export function TeamEditForm({ team }: { team: Team }) {
                 <ImageUploader
                   currentUrl={field.value || null}
                   label={`Logo de ${team.name}`}
+                  disabled={readOnly}
                   upload={async (file) => {
                     const res = await uploadLogo.mutateAsync(file)
                     field.onChange(res.logo_url)
@@ -107,17 +119,19 @@ export function TeamEditForm({ team }: { team: Team }) {
             <FormItem className="sm:col-span-2">
               <FormLabel>Entrenador</FormLabel>
               <FormControl>
-                <Input placeholder="Opcional" {...field} />
+                <Input placeholder="Opcional" readOnly={readOnly} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            Guardar cambios
-          </Button>
-        </div>
+        {!readOnly ? (
+          <div className="sm:col-span-2">
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              Guardar cambios
+            </Button>
+          </div>
+        ) : null}
       </form>
     </Form>
   )

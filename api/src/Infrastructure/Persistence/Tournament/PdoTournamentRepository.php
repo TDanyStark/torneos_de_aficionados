@@ -74,7 +74,7 @@ final class PdoTournamentRepository implements TournamentRepository
      * @param array<int,string> $roles
      * @return array<int,Tournament>
      */
-    public function findByMemberRoles(int $userId, array $roles): array
+    public function findByMemberRoles(int $userId, array $roles, bool $includeHidden = false): array
     {
         $roles = array_values(array_filter($roles, static fn ($r): bool => is_string($r) && $r !== ''));
         if ($roles === []) {
@@ -89,12 +89,20 @@ final class PdoTournamentRepository implements TournamentRepository
             $params[$key] = $role;
         }
 
+        // A tournament is "hidden" when every matching role row has hidden_at
+        // set. SUM(hidden_at IS NULL) > 0 means at least one visible row.
+        // Default view keeps visible tournaments; the hidden view keeps the rest.
+        $having = $includeHidden
+            ? 'HAVING SUM(tur.hidden_at IS NULL) = 0'
+            : 'HAVING SUM(tur.hidden_at IS NULL) > 0';
+
         $sql = 'SELECT t.* FROM tournaments t
                 INNER JOIN tournament_user_roles tur ON tur.tournament_id = t.id
                 WHERE tur.user_id = :user_id
                   AND tur.role IN (' . implode(', ', $placeholders) . ')
                   AND t.deleted_at IS NULL
                 GROUP BY t.id
+                ' . $having . '
                 ORDER BY t.updated_at DESC';
 
         $stmt = $this->pdo->prepare($sql);

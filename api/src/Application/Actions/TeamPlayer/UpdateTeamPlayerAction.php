@@ -7,10 +7,12 @@ namespace App\Application\Actions\TeamPlayer;
 use App\Application\Action\ApiAction;
 use App\Application\Authorization\TournamentAuthorizer;
 use App\Application\Responder\JsonResponder;
+use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Shared\Exception\ValidationException;
 use App\Domain\Team\TeamRepository;
 use App\Domain\TeamPlayer\TeamPlayerRepository;
+use App\Domain\Tournament\TournamentRepository;
 use App\Domain\User\User;
 use Psr\Http\Message\ResponseInterface as Response;
 
@@ -31,6 +33,7 @@ final class UpdateTeamPlayerAction extends ApiAction
         JsonResponder $responder,
         private TeamPlayerRepository $teamPlayers,
         private TeamRepository $teams,
+        private TournamentRepository $tournaments,
         private TournamentAuthorizer $authorizer
     ) {
         parent::__construct($responder);
@@ -54,6 +57,17 @@ final class UpdateTeamPlayerAction extends ApiAction
         }
 
         $this->authorizer->assert($user, $team->tournamentId, ['organizer', 'delegate']);
+
+        $isOrganizer = $this->userHasRole($user, $team->tournamentId, 'organizer');
+
+        // Once registrations close, delegates can no longer edit roster entries;
+        // only the organizer (or admin) may (e.g. to moderate).
+        if (!$user->isAdmin && !$isOrganizer) {
+            $tournament = $this->tournaments->findById($team->tournamentId);
+            if ($tournament !== null && !$tournament->registrationOpen) {
+                throw new ForbiddenException('Las inscripciones están cerradas. Solo el organizador puede modificar la plantilla.');
+            }
+        }
 
         $body = $this->body();
         $data = [];
@@ -91,8 +105,8 @@ final class UpdateTeamPlayerAction extends ApiAction
                 // gate when the request actually changes moderation state.
                 $isModeration = $status === 'rejected'
                     || ($status === 'active' && $teamPlayer->status === 'rejected');
-                if ($isModeration) {
-                    $this->authorizer->assert($user, $team->tournamentId, ['organizer']);
+                if ($isModeration && !$user->isAdmin && !$isOrganizer) {
+                    throw new ForbiddenException('Solo el organizador puede rechazar o readmitir jugadores.');
                 }
 
                 $data['status'] = $status;
@@ -124,5 +138,16 @@ final class UpdateTeamPlayerAction extends ApiAction
         $updated = $this->teamPlayers->update($id, $data);
 
         return $this->responder->success($this->response, $updated);
+    }
+
+    private function userHasRole(User $user, int $tournamentId, string $role): bool
+    {
+        try {
+            $this->authorizer->assert($user, $tournamentId, [$role]);
+
+            return true;
+        } catch (ForbiddenException) {
+            return false;
+        }
     }
 }

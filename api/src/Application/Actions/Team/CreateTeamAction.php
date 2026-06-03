@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Application\Actions\Team;
 
 use App\Application\Action\ApiAction;
+use App\Application\Authorization\TournamentAuthorizer;
 use App\Application\Responder\JsonResponder;
 use App\Domain\Registration\RegistrationRepository;
+use App\Domain\Shared\Exception\ForbiddenException;
 use App\Domain\Shared\Exception\NotFoundException;
 use App\Domain\Shared\Exception\ValidationException;
 use App\Domain\Team\TeamRepository;
@@ -19,6 +21,10 @@ use Psr\Http\Message\ResponseInterface as Response;
  * Creates a team in 'pending' status and records a manual registration so the
  * organizer's inbox stays consistent. {id} is the tournament id (RoleMiddleware
  * already guarded organizer|delegate).
+ *
+ * Delegate ownership: a team created by an ORGANIZER has NO delegate
+ * (delegate_user_id = null) — organizers are never a team's delegate. Only a
+ * delegate creating a team becomes its delegate.
  */
 final class CreateTeamAction extends ApiAction
 {
@@ -26,7 +32,8 @@ final class CreateTeamAction extends ApiAction
         JsonResponder $responder,
         private TeamRepository $teams,
         private TournamentRepository $tournaments,
-        private RegistrationRepository $registrations
+        private RegistrationRepository $registrations,
+        private TournamentAuthorizer $authorizer
     ) {
         parent::__construct($responder);
     }

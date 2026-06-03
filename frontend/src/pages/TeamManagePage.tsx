@@ -51,6 +51,7 @@ export function TeamManagePage() {
         tournamentId={tournamentId}
         teamId={numericTeamId}
         rosterLimit={tournament.data.roster_limit ?? null}
+        registrationOpen={tournament.data.registration_open}
       />
     </div>
   )

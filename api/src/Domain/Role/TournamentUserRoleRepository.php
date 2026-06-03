@@ -37,4 +37,11 @@ interface TournamentUserRoleRepository
     public function create(int $tournamentId, int $userId, string $role, ?int $teamId): TournamentUserRole;
 
     public function delete(int $id): void;
+
+    /**
+     * Hide ($hide=true) or restore ($hide=false) every role row a user holds in
+     * a tournament, so the tournament drops from / returns to their feed.
+     * Returns the number of affected rows (0 = the user had no roles there).
+     */
+    public function setHidden(int $tournamentId, int $userId, bool $hide): int;
 }

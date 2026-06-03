@@ -28,10 +28,15 @@ interface TournamentRepository
      * Full tournament entities where the user holds at least one of the given
      * per-tournament roles (e.g. organizer, delegate), newest first. Deduped.
      *
+     * By default ($includeHidden=false) tournaments the user has hidden are
+     * excluded (a tournament is hidden when ALL their matching role rows have
+     * hidden_at set). Pass $includeHidden=true to return ONLY the hidden ones
+     * (the "Ver ocultos" view).
+     *
      * @param array<int,string> $roles
      * @return array<int,Tournament>
      */
-    public function findByMemberRoles(int $userId, array $roles): array;
+    public function findByMemberRoles(int $userId, array $roles, bool $includeHidden = false): array;
 
     public function slugExists(string $slug): bool;
 
