@@ -80,10 +80,12 @@ use App\Application\Actions\TeamPlayer\ListRosterAction;
 use App\Application\Actions\TeamPlayer\UpdateTeamPlayerAction;
 use App\Application\Actions\Tournament\CreateTournamentAction;
 use App\Application\Actions\Tournament\DeleteTournamentAction;
+use App\Application\Actions\Tournament\ListFollowedTournamentsAction;
 use App\Application\Actions\Tournament\ListMyTournamentsAction;
 use App\Application\Actions\Tournament\ListTournamentsAction;
 use App\Application\Actions\Tournament\ShowTournamentAction;
 use App\Application\Actions\Tournament\ShowTournamentByIdAction;
+use App\Application\Actions\Tournament\ShowTournamentBySlugAction;
 use App\Application\Actions\Tournament\UpdateTournamentAction;
 use App\Application\Actions\Tournament\UploadTournamentLogoAction;
 use App\Application\Middleware\AdminMiddleware;
@@ -129,6 +131,11 @@ return function (App $app) {
         $group->group('/me', function (Group $me) {
             $me->get('/registrations', ListMyRegistrationsAction::class)
                 ->add(JwtAuthMiddleware::class);
+            // "Torneos que sigo": tournaments where the user is organizer or
+            // delegate, each annotated with my_roles. Visitor/player follows are
+            // localStorage-only on the client and merged there.
+            $me->get('/tournaments', ListFollowedTournamentsAction::class)
+                ->add(JwtAuthMiddleware::class);
         });
 
         // Sports module (public catalog)
@@ -147,6 +154,8 @@ return function (App $app) {
             $tournaments->get('/mine', ListMyTournamentsAction::class)
                 ->add(JwtAuthMiddleware::class);
             $tournaments->get('/by-id/{id}', ShowTournamentByIdAction::class)
+                ->add(JwtAuthMiddleware::class);
+            $tournaments->get('/by-slug/{slug}', ShowTournamentBySlugAction::class)
                 ->add(JwtAuthMiddleware::class);
 
             $tournaments->get('/{slug}', ShowTournamentAction::class);

@@ -3,7 +3,6 @@
  */
 
 export type TournamentStatus =
-  | 'draft'
   | 'registration'
   | 'in_progress'
   | 'finished'
@@ -62,6 +61,8 @@ export interface Tournament {
   description: string | null
   logo_url: string | null
   status: TournamentStatus
+  /** Visibility: true = listed publicly in /torneos; false = link-only (default). */
+  is_public: boolean
   periods_count: number
   points_win: number
   points_draw: number
@@ -167,6 +168,10 @@ export interface CreateTournamentMinimalPayload {
 
 export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
   status?: TournamentStatus
+  /** Visibility toggle (listar públicamente). */
+  is_public?: boolean
+  /** Shareable slug — editable/regenerable by the organizer (anti-spam). */
+  slug?: string
   /** Fase 9 — editable enrichment fields (partial-update friendly). */
   ends_at?: string | null
   rules?: string | null
@@ -176,6 +181,15 @@ export type UpdateTournamentPayload = Partial<CreateTournamentPayload> & {
   registration_info?: string | null
   /** Fase 15 — null = sin límite. */
   roster_limit?: number | null
+}
+
+/**
+ * "Torneos que sigo" — a tournament where the logged-in user holds member roles
+ * (organizer/delegate). Returned by GET /me/tournaments. Extends Tournament with
+ * the user's roles in that tournament.
+ */
+export interface FollowedTournament extends Tournament {
+  my_roles: Array<'organizer' | 'delegate'>
 }
 
 /** Fase 9 — response of POST /tournaments/{id}/logo. */

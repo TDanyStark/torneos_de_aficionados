@@ -66,6 +66,46 @@ final class PdoTournamentRepository implements TournamentRepository
         return $row ? Tournament::fromRow($row) : null;
     }
 
+    /**
+     * Tournaments where the user holds at least one of the given per-tournament
+     * roles. Deduped (a user may hold several role rows for one tournament) and
+     * ordered newest first.
+     *
+     * @param array<int,string> $roles
+     * @return array<int,Tournament>
+     */
+    public function findByMemberRoles(int $userId, array $roles): array
+    {
+        $roles = array_values(array_filter($roles, static fn ($r): bool => is_string($r) && $r !== ''));
+        if ($roles === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = ['user_id' => $userId];
+        foreach ($roles as $i => $role) {
+            $key = "role$i";
+            $placeholders[] = ":$key";
+            $params[$key] = $role;
+        }
+
+        $sql = 'SELECT t.* FROM tournaments t
+                INNER JOIN tournament_user_roles tur ON tur.tournament_id = t.id
+                WHERE tur.user_id = :user_id
+                  AND tur.role IN (' . implode(', ', $placeholders) . ')
+                  AND t.deleted_at IS NULL
+                GROUP BY t.id
+                ORDER BY t.updated_at DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(
+            static fn (array $row): Tournament => Tournament::fromRow($row),
+            $stmt->fetchAll()
+        );
+    }
+
     public function slugExists(string $slug): bool
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM tournaments WHERE slug = :slug LIMIT 1');
@@ -127,14 +167,14 @@ final class PdoTournamentRepository implements TournamentRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO tournaments
-                (sport_id, owner_user_id, name, slug, description, logo_url, status,
+                (sport_id, owner_user_id, name, slug, description, logo_url, status, is_public,
                  periods_count, points_win, points_draw, points_loss,
                  allow_late_registration, registration_open, registration_code,
                  starts_at, ends_at, timezone, rules, prizes,
                  suspension_red_card, suspension_double_yellow, roster_limit,
                  registration_info, created_at, updated_at)
              VALUES
-                (:sport_id, :owner_user_id, :name, :slug, :description, :logo_url, :status,
+                (:sport_id, :owner_user_id, :name, :slug, :description, :logo_url, :status, :is_public,
                  :periods_count, :points_win, :points_draw, :points_loss,
                  :allow_late_registration, :registration_open, :registration_code,
                  :starts_at, :ends_at, :timezone, :rules, :prizes,
@@ -148,7 +188,8 @@ final class PdoTournamentRepository implements TournamentRepository
             'slug'                     => $data['slug'],
             'description'              => $data['description'] ?? null,
             'logo_url'                 => $data['logo_url'] ?? null,
-            'status'                   => $data['status'] ?? 'draft',
+            'status'                   => $data['status'] ?? 'registration',
+            'is_public'                => !empty($data['is_public']) ? 1 : 0,
             'periods_count'            => $data['periods_count'],
             'points_win'               => $data['points_win'],
             'points_draw'              => $data['points_draw'],
@@ -181,7 +222,7 @@ final class PdoTournamentRepository implements TournamentRepository
     public function update(int $id, array $data): Tournament
     {
         $allowed = [
-            'name', 'description', 'logo_url', 'status', 'periods_count',
+            'name', 'slug', 'description', 'logo_url', 'status', 'is_public', 'periods_count',
             'points_win', 'points_draw', 'points_loss', 'allow_late_registration',
             'registration_open', 'registration_code', 'starts_at', 'ends_at',
             'timezone', 'rules', 'suspension_red_card', 'suspension_double_yellow',
@@ -189,7 +230,7 @@ final class PdoTournamentRepository implements TournamentRepository
         ];
 
         $booleans = [
-            'allow_late_registration', 'registration_open',
+            'is_public', 'allow_late_registration', 'registration_open',
             'suspension_red_card', 'suspension_double_yellow',
         ];
 
@@ -247,13 +288,19 @@ final class PdoTournamentRepository implements TournamentRepository
     }
 
     /**
-     * @param array{sport_id?:?int,status?:?string,q?:?string} $filters
+     * @param array{sport_id?:?int,status?:?string,q?:?string,public_only?:?bool} $filters
      * @return array{0:string,1:array<string,mixed>}
      */
     private function buildFilters(array $filters): array
     {
         $clauses = ['deleted_at IS NULL'];
         $params = [];
+
+        // Public listing: only visible tournaments, and never archived ones.
+        if (!empty($filters['public_only'])) {
+            $clauses[] = 'is_public = 1';
+            $clauses[] = "status <> 'archived'";
+        }
 
         if (!empty($filters['sport_id'])) {
             $clauses[] = 'sport_id = :sport_id';

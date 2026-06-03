@@ -89,7 +89,10 @@ final class CreateTournamentAction extends ApiAction
         $pointsDraw = (int) ($config['points_draw'] ?? 1);
         $pointsLoss = (int) ($config['points_loss'] ?? 0);
 
-        $slug = $this->uniqueSlug($name);
+        // Shareable, human-readable slug: "<nombre>-<mes>-<año>" (e.g.
+        // "liga-espana-junio-2026"). The organizer can regenerate/change it
+        // later if it gets spammed. Made unique with a numeric suffix.
+        $slug = $this->uniqueSlug($name . '-' . $this->monthYearSuffix());
 
         $tournament = $this->tournaments->create([
             'sport_id'                => $sport->id,
@@ -98,14 +101,18 @@ final class CreateTournamentAction extends ApiAction
             'slug'                    => $slug,
             'description'             => $description !== '' ? $description : null,
             'logo_url'                => $logoUrl !== '' ? $logoUrl : null,
-            'status'                  => 'draft',
+            // No draft mode: tournaments start accepting registrations.
+            'status'                  => 'registration',
+            // Private by default — reachable only via the shareable link.
+            'is_public'               => false,
             'periods_count'           => $periods,
             'points_win'              => $pointsWin,
             'points_draw'             => $pointsDraw,
             'points_loss'             => $pointsLoss,
             'allow_late_registration' => !empty($body['allow_late_registration']),
-            'registration_open'       => false,
-            'registration_code'       => null,
+            // Registrations open by default, with a code ready for the share link.
+            'registration_open'       => true,
+            'registration_code'       => $this->uniqueRegistrationCode(),
             'starts_at'               => $startsAt,
             'timezone'                => $timezone,
         ]);
@@ -163,6 +170,31 @@ final class CreateTournamentAction extends ApiAction
         }
 
         return $slug;
+    }
+
+    /**
+     * Spanish month + year suffix for the shareable slug (e.g. "junio-2026").
+     */
+    private function monthYearSuffix(): string
+    {
+        static $months = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+        ];
+
+        $now = new \DateTimeImmutable('now');
+
+        return $months[(int) $now->format('n')] . '-' . $now->format('Y');
+    }
+
+    private function uniqueRegistrationCode(): string
+    {
+        do {
+            $code = Slug::code(8);
+        } while ($this->tournaments->registrationCodeExists($code));
+
+        return $code;
     }
 
     private function isValidDate(string $date): bool

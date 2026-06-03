@@ -1,14 +1,22 @@
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   CalendarDays,
+  Heart,
   ListOrdered,
+  Pencil,
+  Share2,
   ShieldAlert,
   Trophy,
+  UserPlus,
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/shared/StateMessage'
+import { useFollowStore } from '@/stores/followStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { cn } from '@/lib/utils'
 import { useTournamentDetail } from '@/features/tournaments/api/useTournaments'
@@ -48,6 +56,30 @@ export function TournamentPage() {
   const { slug } = useParams<{ slug: string }>()
   const { data, isLoading, isError, error } = useTournamentDetail(slug)
   const { tab, setTab } = useTournamentTabs()
+
+  // Visitor/player "follow" — persisted in localStorage (no login needed).
+  const isFollowing = useFollowStore((s) =>
+    data ? s.isFollowing(data.id) : false,
+  )
+  const toggleFollow = useFollowStore((s) => s.toggle)
+
+  // Organizer of THIS tournament (per-tournament role). Gates the "Editar"
+  // action so management lives behind the single public link.
+  const roles = useAuthStore((s) => s.roles)
+  const isOrganizer = data
+    ? roles.some((r) => r.tournament_id === data.id && r.role === 'organizer')
+    : false
+
+  const shareLink = async () => {
+    if (!data) return
+    const url = `${window.location.origin}/t/${data.slug}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Enlace del torneo copiado')
+    } catch {
+      toast.error('No se pudo copiar el enlace')
+    }
+  }
 
   // Single source of truth for stages: lifted here so the phase selector and
   // the phase-aware panels (Fixtures/Tabla) share one resolved active stage.
@@ -102,6 +134,48 @@ export function TournamentPage() {
           <h1 className="text-2xl font-semibold">{data.name}</h1>
         </div>
         <TournamentStatusBadge status={data.status} />
+      </div>
+
+      {/* Actions: inscribe a team (when open), follow, and share — all from the
+          single tournament link. */}
+      <div className="flex flex-wrap gap-2">
+        {data.registration_open && data.registration_code ? (
+          <Button asChild size="sm">
+            <Link to={`/inscripcion/${data.id}/${data.registration_code}`}>
+              <UserPlus className="size-4" />
+              Inscribir mi equipo
+            </Link>
+          </Button>
+        ) : null}
+        <Button
+          variant={isFollowing ? 'default' : 'outline'}
+          size="sm"
+          onClick={() =>
+            toggleFollow({
+              id: data.id,
+              slug: data.slug,
+              name: data.name,
+              logo_url: data.logo_url,
+            })
+          }
+        >
+          <Heart
+            className={cn('size-4', isFollowing && 'fill-current')}
+          />
+          {isFollowing ? 'Siguiendo' : 'Seguir'}
+        </Button>
+        <Button variant="outline" size="sm" onClick={shareLink}>
+          <Share2 className="size-4" />
+          Compartir
+        </Button>
+        {isOrganizer ? (
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/t/${data.slug}/edit`}>
+              <Pencil className="size-4" />
+              Editar
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
       {/* Phase selector — only shown for multi-stage tournaments. Scopes the

@@ -96,7 +96,7 @@ export function HomePage() {
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {Array.from({ length: FEATURED_LIMIT }).map((_, i) => (
               <TournamentCardSkeleton key={i} />
             ))}
@@ -109,7 +109,7 @@ export function HomePage() {
             description="Sé el primero en crear uno y compartirlo."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {featured.map((t) => (
               <TournamentCard key={t.id} tournament={t} />
             ))}

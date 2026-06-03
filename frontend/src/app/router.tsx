@@ -19,6 +19,7 @@ import { TeamManagePage } from '@/pages/TeamManagePage'
 import { RegistrationsInboxPage } from '@/pages/RegistrationsInboxPage'
 import { TournamentTeamsPage } from '@/pages/TournamentTeamsPage'
 import { MyRegistrationsPage } from '@/pages/MyRegistrationsPage'
+import { FollowedTournamentsPage } from '@/pages/FollowedTournamentsPage'
 import { PlayerHistoryPage } from '@/pages/PlayerHistoryPage'
 import { SelfRegistrationPage } from '@/pages/SelfRegistrationPage'
 import { BracketPage } from '@/pages/BracketPage'
@@ -43,6 +44,9 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/torneos', element: <TournamentListPage /> },
+      // "Torneos que sigo" — works for visitors (localStorage follows) and
+      // logged-in users (organizer/delegate from the backend), so it is public.
+      { path: '/torneos-que-sigo', element: <FollowedTournamentsPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
 
@@ -68,7 +72,7 @@ export const router = createBrowserRouter([
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/mis-inscripciones', element: <MyRegistrationsPage /> },
           { path: '/tournaments/new', element: <TournamentWizardPage /> },
-          { path: '/tournaments/:id/edit', element: <TournamentEditPage /> },
+          { path: '/t/:slug/edit', element: <TournamentEditPage /> },
           { path: '/tournaments/:id/roles', element: <TournamentRolesPage /> },
 
           // Organizer/delegate team & registration management (by tournament id).

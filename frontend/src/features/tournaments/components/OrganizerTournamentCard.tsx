@@ -18,17 +18,13 @@ export function OrganizerTournamentCard({
 }: {
   tournament: Tournament
 }) {
-  const copyRegistrationLink = async () => {
-    if (!tournament.registration_code) {
-      toast.error(
-        'Abre las inscripciones del torneo para generar el enlace de inscripción.',
-      )
-      return
-    }
-    const link = `${window.location.origin}/inscripcion/${tournament.id}/${tournament.registration_code}`
+  const copyShareLink = async () => {
+    // Single shareable link: the public tournament hub. Anyone with it can see
+    // the tournament and (if registrations are open) inscribe their team.
+    const link = `${window.location.origin}/t/${tournament.slug}`
     try {
       await navigator.clipboard.writeText(link)
-      toast.success('Enlace de inscripción copiado')
+      toast.success('Enlace del torneo copiado')
     } catch {
       toast.error('No se pudo copiar el enlace')
     }
@@ -56,7 +52,7 @@ export function OrganizerTournamentCard({
       </CardContent>
       <CardFooter className="flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/tournaments/${tournament.id}/edit`}>
+          <Link to={`/t/${tournament.slug}/edit`}>
             <Pencil className="size-4" />
             Editar
           </Link>
@@ -79,7 +75,7 @@ export function OrganizerTournamentCard({
             Fixtures
           </Link>
         </Button>
-        <Button variant="outline" size="sm" onClick={copyRegistrationLink}>
+        <Button variant="outline" size="sm" onClick={copyShareLink}>
           <Copy className="size-4" />
           Copiar enlace
         </Button>

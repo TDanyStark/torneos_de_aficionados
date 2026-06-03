@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/apiClient'
 import type { Paginated } from '@/lib/apiTypes'
 import type {
   CreateTournamentMinimalPayload,
+  FollowedTournament,
   Tournament,
   TournamentFilters,
   UpdateTournamentPayload,
@@ -45,6 +46,20 @@ export function useTournamentDetail(slug: string | undefined) {
     enabled: Boolean(slug),
     queryFn: ({ signal }) =>
       apiClient.get<Tournament>(`/tournaments/${slug}`, undefined, signal),
+  })
+}
+
+/**
+ * Tournaments where the logged-in user is organizer or delegate, annotated with
+ * `my_roles`. Backs the "Torneos que sigo" view (merged with localStorage
+ * follows). Disabled when there's no session.
+ */
+export function useFollowedTournaments(enabled: boolean) {
+  return useQuery({
+    queryKey: ['tournaments', 'followed-mine'] as const,
+    enabled,
+    queryFn: ({ signal }) =>
+      apiClient.get<FollowedTournament[]>('/me/tournaments', undefined, signal),
   })
 }
 

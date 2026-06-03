@@ -79,6 +79,13 @@ export const configSchema = z.object({
   points_loss: intString({ min: 0 }),
   allow_late_registration: z.boolean(),
   registration_open: z.boolean(),
+  /** Visibility: listar el torneo públicamente en /torneos. */
+  is_public: z.boolean(),
+  /** Enlace único del torneo (slug). Editable por el organizador. */
+  slug: z
+    .string()
+    .min(3, 'El enlace debe tener al menos 3 caracteres')
+    .max(170, 'El enlace es demasiado largo'),
   /** Fase 15 — límite de inscritos por equipo; vacío = sin límite (5-100). */
   roster_limit: optionalBoundedIntString({ min: 5, max: 100 }),
   starts_at: z

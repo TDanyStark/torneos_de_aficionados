@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge'
 import type { TournamentStatus } from '../types'
 
 const LABELS: Record<TournamentStatus, string> = {
-  draft: 'Borrador',
   registration: 'Inscripciones',
   in_progress: 'En curso',
   finished: 'Finalizado',
@@ -13,7 +12,6 @@ const VARIANTS: Record<
   TournamentStatus,
   'default' | 'secondary' | 'outline' | 'destructive'
 > = {
-  draft: 'outline',
   registration: 'default',
   in_progress: 'default',
   finished: 'secondary',

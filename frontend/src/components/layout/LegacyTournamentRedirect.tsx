@@ -21,8 +21,13 @@ export function LegacyTournamentRedirect({
 }: LegacyTournamentRedirectProps) {
   const { slug } = useParams<{ slug: string }>()
   if (slug && /^\d+$/.test(slug)) {
+    // A numeric param is an organizer id that leaked into a public-shaped URL.
+    // Editing is now addressed by slug (`/t/:slug/edit`), which we can't build
+    // from an id here, so forward to the by-id team management page instead.
     const target =
-      tab === 'fixtures' ? `/tournaments/${slug}/fixtures` : `/tournaments/${slug}/edit`
+      tab === 'fixtures'
+        ? `/tournaments/${slug}/fixtures`
+        : `/tournaments/${slug}/teams`
     return <Navigate to={target} replace />
   }
   const query = tab && tab !== 'resumen' ? `?tab=${tab}` : ''

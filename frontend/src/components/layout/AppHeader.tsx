@@ -29,13 +29,13 @@ export function AppHeader() {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/torneos">Torneos</Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/torneos-que-sigo">Torneos que sigo</Link>
+          </Button>
           {token ? (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/dashboard">Mis torneos</Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/mis-inscripciones">Mis inscripciones</Link>
               </Button>
               <ThemeToggle />
               <span className="text-muted-foreground ml-1 hidden text-sm sm:inline">

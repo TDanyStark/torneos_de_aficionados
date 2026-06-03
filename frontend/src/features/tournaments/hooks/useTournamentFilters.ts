@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import type { TournamentFilters, TournamentStatus } from '../types'
 
 const STATUS_VALUES: TournamentStatus[] = [
-  'draft',
   'registration',
   'in_progress',
   'finished',

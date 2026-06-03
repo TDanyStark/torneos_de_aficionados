@@ -57,7 +57,7 @@ export function TournamentWizardPage() {
       const created = await createTournament.mutateAsync(
         createToPayload(values),
       )
-      navigate(`/tournaments/${created.id}/edit`)
+      navigate(`/t/${created.slug}/edit`)
     } catch (error) {
       applyApiError(error, form.setError, ['sport_id', 'name'])
     }

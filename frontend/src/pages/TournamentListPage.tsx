@@ -26,7 +26,7 @@ export function TournamentListPage() {
       <TournamentFilterBar filters={filters} onChange={setFilters} />
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <TournamentCardSkeleton key={i} />
           ))}
@@ -40,7 +40,7 @@ export function TournamentListPage() {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {data.items.map((t) => (
               <TournamentCard key={t.id} tournament={t} />
             ))}

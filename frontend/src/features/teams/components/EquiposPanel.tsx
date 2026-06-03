@@ -26,7 +26,7 @@ export function EquiposPanel({ tournament }: EquiposPanelProps) {
       <TeamFilterBar filters={filters} onChange={setFilters} />
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <TeamCardSkeleton key={i} />
           ))}
@@ -40,7 +40,7 @@ export function EquiposPanel({ tournament }: EquiposPanelProps) {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {data.items.map((team) => (
               <TeamCard
                 key={team.id}

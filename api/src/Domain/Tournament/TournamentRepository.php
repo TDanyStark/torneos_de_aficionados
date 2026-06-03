@@ -24,6 +24,15 @@ interface TournamentRepository
 
     public function findByRegistrationCode(string $code): ?Tournament;
 
+    /**
+     * Full tournament entities where the user holds at least one of the given
+     * per-tournament roles (e.g. organizer, delegate), newest first. Deduped.
+     *
+     * @param array<int,string> $roles
+     * @return array<int,Tournament>
+     */
+    public function findByMemberRoles(int $userId, array $roles): array;
+
     public function slugExists(string $slug): bool;
 
     public function registrationCodeExists(string $code): bool;
@@ -31,13 +40,13 @@ interface TournamentRepository
     /**
      * Paginated public listing with optional filters.
      *
-     * @param array{sport_id?:?int,status?:?string,q?:?string} $filters
+     * @param array{sport_id?:?int,status?:?string,q?:?string,public_only?:?bool} $filters
      * @return array<int,Tournament>
      */
     public function paginate(Pagination $pagination, array $filters): array;
 
     /**
-     * @param array{sport_id?:?int,status?:?string,q?:?string} $filters
+     * @param array{sport_id?:?int,status?:?string,q?:?string,public_only?:?bool} $filters
      */
     public function countAll(array $filters): int;
 

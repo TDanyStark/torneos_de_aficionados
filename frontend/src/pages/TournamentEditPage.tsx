@@ -88,6 +88,8 @@ const FIELD_SECTION: Record<string, SectionKey> = {
   registration_open: 'inscripciones',
   registration_info: 'inscripciones',
   roster_limit: 'inscripciones',
+  is_public: 'inscripciones',
+  slug: 'inscripciones',
 }
 
 /** Human-readable label per field, used in the validation error toast. */
@@ -112,11 +114,12 @@ const FIELD_LABEL: Record<string, string> = {
   registration_open: 'Inscripciones',
   registration_info: 'Información para inscritos',
   roster_limit: 'Límite de inscritos por equipo',
+  is_public: 'Visibilidad',
+  slug: 'Enlace del torneo',
 }
 
 export function TournamentEditPage() {
-  const { id } = useParams<{ id: string }>()
-  const tournamentId = Number(id)
+  const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const isAdmin = useIsAdmin()
   const roles = useAuthStore((s) => s.roles)
@@ -127,12 +130,14 @@ export function TournamentEditPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: [...tournamentKeys.all, 'by-id', tournamentId],
-    enabled: Number.isFinite(tournamentId) && tournamentId > 0,
+    queryKey: [...tournamentKeys.all, 'by-slug', slug],
+    enabled: Boolean(slug),
     queryFn: () =>
-      apiClient.get<Tournament>(`/tournaments/by-id/${tournamentId}`),
+      apiClient.get<Tournament>(`/tournaments/by-slug/${slug}`),
   })
 
+  // The mutation targets the numeric id, resolved once the tournament loads.
+  const tournamentId = tournament?.id ?? 0
   const update = useUpdateTournament(tournamentId)
 
   const form = useForm<TournamentFormValues>({
@@ -150,6 +155,11 @@ export function TournamentEditPage() {
       toast.success('Torneo actualizado')
       // Stay on the page and re-baseline the form so isDirty resets to false.
       form.reset(tournamentToForm(updated))
+      // The slug is editable. If it changed, the current URL is now stale —
+      // forward to the new canonical edit URL so a refresh keeps working.
+      if (updated.slug !== slug) {
+        navigate(`/t/${updated.slug}/edit`, { replace: true })
+      }
     } catch (error) {
       applyApiError(error, form.setError)
     }
@@ -498,23 +508,66 @@ export function TournamentEditPage() {
                   <AccordionContent className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="registration_open"
+                      name="is_public"
                       render={({ field }) => (
                         <FormItem className="flex items-center justify-between rounded-md border p-3">
                           <div>
-                            <FormLabel>Inscripciones cerradas</FormLabel>
+                            <FormLabel>Listar públicamente</FormLabel>
                             <FormDescription>
-                              Al activarlo, los equipos no podrán inscribirse en
-                              el torneo.
+                              Si lo activas, el torneo aparece en la lista
+                              pública de /torneos. Si no, solo es accesible con
+                              el enlace que compartas.
                             </FormDescription>
                           </div>
                           <FormControl>
                             <Switch
-                              aria-label="Inscripciones cerradas"
-                              checked={!field.value}
-                              onCheckedChange={(closed) =>
-                                field.onChange(!closed)
-                              }
+                              aria-label="Listar públicamente"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="slug"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Enlace del torneo</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="liga-espana-junio-2026"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Parte final del enlace público:{' '}
+                            {`${window.location.origin}/t/`}
+                            <strong>{field.value || 'tu-enlace'}</strong>.
+                            Cámbialo si recibes spam.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="registration_open"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-md border p-3">
+                          <div>
+                            <FormLabel>Inscripciones abiertas</FormLabel>
+                            <FormDescription>
+                              Cuando están abiertas, aparece el botón «Inscribir
+                              mi equipo» en el enlace del torneo.
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              aria-label="Inscripciones abiertas"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
                             />
                           </FormControl>
                         </FormItem>
